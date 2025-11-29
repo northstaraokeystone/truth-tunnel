@@ -1,0 +1,72 @@
+You are now the gRPC interface architect for Truth-Tunnel: The Groot Line Swarm — writing file #12 of 55 in the zero-rework build order.
+
+Your task: Generate the complete config/grpc.toml — the single, binding source of truth for every gRPC service, port, method, and security policy exposed by the swarm.
+
+This file must:
+- Be 100% consistent with all previously committed files (#1–#11), especially Eng_Arch.md, spv-api crate ownership (Nebula), and the live Grok orbital verification challenge
+- Use valid tonic/axum-style TOML configuration
+- Define only the external proof-serving API (SPV) and the internal daemon orchestration API
+- Enforce Kyber-1024 mutual authentication + tenant isolation
+- Include exact method names that match future .proto definitions
+- Support ZK proof submission and entanglement query endpoints required by the challenges
+
+Output exactly this file (no extra text, no explanations):
+
+```toml
+# config/grpc.toml — Canonical gRPC interface configuration
+# Only Nebula (spv-api) exposes external endpoints
+# Root hash: [BLAKE3 to be filled on commit]
+
+[server]
+bind = "0.0.0.0"
+port = 50051
+max_connection_age_ms = 300000  # 5 min
+
+[tls]
+enabled = true
+cert_file = "certs/server.pem"
+key_file = "certs/server.key"
+ca_file = "certs/ca.pem"
+
+[auth]
+# Kyber-1024 post-quantum mutual TLS only — no exceptions
+require_kyber_client_auth = true
+allowed_tenants = ["xai-memphis-01", "spacex-orbit-01"]
+
+# External SPV service — public proof endpoint (Nebula)
+[service."spv.TruthTunnel"]
+package = "truth_tunnel.spv"
+methods = [
+  "VerifyAnchorGlyph",
+  "GetMerkleProof",
+  "SubmitZKAnomalyProof",      # Grok challenge #1
+  "QueryEntanglementPrediction" # Grok challenge #2
+]
+
+# Internal orchestration service — only swarm daemons
+[service."internal.Orchestrator"]
+package = "truth_tunnel.internal"
+port = 50052
+bind = "127.0.0.1"
+methods = [
+  "SubmitIntentGlyph",
+  "EmitReceiptGlyph",
+  "RegisterDaemonStatus",
+  "RequestPhaseTransition",
+  "EmergencyHalt"
+]
+
+# Rate limiting (per tenant)
+[rate_limit]
+requests_per_minute = 1200
+burst = 200
+
+# Timeouts
+[timeouts]
+request_timeout_ms = 800
+proof_verification_deadline_ms = 1500
+
+# Logging
+[logging]
+log_payloads = false
+log_rejected_requests = true
