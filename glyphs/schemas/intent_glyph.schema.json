@@ -1,0 +1,126 @@
+{
+  "$id": "https://truth-tunnel.org/schemas/intent_glyph.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IntentGlyph",
+  "description": "Immutable declaration of authorized intent. The only way anything ever happens in Truth-Tunnel. Every IntentGlyph spawns exactly one AnchorGlyph chain.",
+  "type": "object",
+  "required": [
+    "version",
+    "glyph_id",
+    "timestamp",
+    "tenant_id",
+    "intent_type",
+    "authorized_by",
+    "risk_appetite",
+    "target_context",
+    "constraints",
+    "expires_at"
+  ],
+  "properties": {
+    "version": {
+      "const": "1.0"
+    },
+    "glyph_id": {
+      "type": "string",
+      "pattern": "^intent-[a-f0-9]{32}$",
+      "description": "BLAKE3-derived unique identifier"
+    },
+    "timestamp": {
+      "type": "integer",
+      "description": "Unix timestamp (seconds) when intent was declared"
+    },
+    "tenant_id": {
+      "type": "string",
+      "description": "Isolated tenant namespace"
+    },
+    "intent_type": {
+      "type": "string",
+      "enum": [
+        "initiate_bore",
+        "verify_orbital_feed",
+        "share_zk_anomaly",
+        "simulate_entanglement",
+        "trigger_phase_transition",
+        "emergency_halt"
+      ],
+      "description": "What the swarm is being commanded to do"
+    },
+    "authorized_by": {
+      "type": "string",
+      "enum": [
+        "Star-Lord",
+        "Gamora",
+        "Rocket",
+        "Groot",
+        "Drax",
+        "Nebula",
+        "Mantis",
+        "Yondu",
+        "Kraglin"
+      ],
+      "description": "Guardian that signed this intent (human or daemon)"
+    },
+    "risk_appetite": {
+      "type": "string",
+      "enum": [
+        "conservative",
+        "balanced",
+        "aggressive"
+      ],
+      "description": "Maximum acceptable deviation from SLOs (e.g., latency, integrity, entanglement quality)"
+    },
+    "target_context": {
+      "type": "string",
+      "enum": [
+        "tunnel_bore",
+        "orbital_verify",
+        "zk_anomaly_share",
+        "entanglement_prediction"
+      ],
+      "description": "Which AnchorGlyph context this intent will produce"
+    },
+    "constraints": {
+      "type": "object",
+      "required": [
+        "max_latency_ms",
+        "min_entanglement_quality",
+        "require_zk_proof"
+      ],
+      "properties": {
+        "max_latency_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "Hard upper bound on end-to-end latency (soil-to-orbit or orbit-to-soil)"
+        },
+        "min_entanglement_quality": {
+          "type": "number",
+          "minimum": 0.707,
+          "maximum": 1.0,
+          "description": "Minimum acceptable Bell correlation for latency negation"
+        },
+        "require_zk_proof": {
+          "type": "boolean",
+          "description": "If true, resulting AnchorGlyph must contain Groth16 proof"
+        },
+        "max_drift_percent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Maximum acceptable orbital signal drift before anomaly"
+        }
+      },
+      "additionalProperties": false
+    },
+    "expires_at": {
+      "type": "integer",
+      "description": "Unix timestamp after which this intent is invalid"
+    },
+    "signature": {
+      "type": "string",
+      "description": "Kyber-1024 signature over canonical JSON (excluding this field)",
+      "pattern": "^[a-f0-9]+$"
+    }
+  },
+  "additionalProperties": false
+}

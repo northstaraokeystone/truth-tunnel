@@ -1,0 +1,57 @@
+# config/agents/swarm_roles.yaml
+# Swarm consensus roles — determines voting weight and critique authority
+# Used by star-lord-orchestrator and nebula-guard for dawn builds and anomaly resolution
+
+roles:
+  Star-Lord:
+    weight: 10
+    can_finalize: true
+    critique_scope: all
+
+  Gamora:
+    weight: 8
+    expertise: [quantum_verification, zk_proof, orbital_integrity]
+    can_finalize: true
+
+  Rocket:
+    weight: 7
+    expertise: [prufrock_simulation, prediction_accuracy]
+
+  Groot:
+    weight: 9
+    expertise: [entanglement_prediction, latency_negation, digital_twin]
+
+  Drax:
+    weight: 8
+    expertise: [anomaly_detection, lie_detection]
+    veto_power: true
+
+  Kraglin:
+    weight: 6
+    expertise: [provenance, ledger_integrity]
+
+  Yondu:
+    weight: 7
+    expertise: [phase_orchestration, rollback_execution]
+
+selection:
+  min_acceptance_score: 0.93
+  min_entanglement_transitivity: 0.92
+  require_drax_approval_on_anomaly: true
+
+forks:
+  zk_variant_fast:
+    description: "Fast Groth16 proof generation"
+    slo_target: "zk_proof_time_ms < 800"
+
+  zk_variant_secure:
+    description: "Maximum security parameters"
+    slo_target: "zk_proof_time_ms < 2000"
+
+  entanglement_balanced:
+    description: "Balanced correlation vs compute"
+    slo_target: "predicted_negation_ms > 1.8"
+
+  entanglement_max:
+    description: "Maximum Bell correlation"
+    slo_target: "correlation_score > 0.85"

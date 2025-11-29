@@ -1,0 +1,33 @@
+path = "/data/ledger/rocksdb"
+create_if_missing = true
+enable_statistics = true
+stats_dump_period_sec = 3600
+
+[options]
+max_open_files = 10000
+write_buffer_size = 134217728  # 128 MiB
+target_file_size_base = 134217728
+max_background_jobs = 8
+compression = "zstd"
+bottommost_compression = "zstd"
+
+[column_families.glyphs]
+bloom_filter_bits_per_key = 10
+block_size = 16384
+
+[column_families.receipts]
+bloom_filter_bits_per_key = 10
+block_size = 16384
+
+[column_families.anchors]
+bloom_filter_bits_per_key = 10
+block_size = 16384
+
+[tenant."xai-memphis-01"]
+prefix = "xai-memphis-01:"
+
+[tenant."spacex-orbit-01"]
+prefix = "spacex-orbit-01:"
+
+[compaction]
+weekly_target_bytes = 1099511627776  # 1 TiB trigger for red-loop compaction

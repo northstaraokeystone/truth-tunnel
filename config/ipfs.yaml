@@ -1,0 +1,27 @@
+
+# config/ipfs.yaml
+gateway: "https://ipfs.x.ai"
+api: "http://127.0.0.1:5001"
+timeout_seconds: 90
+
+pinning_service:
+  name: "pinata"
+  endpoint: "https://api.pinata.cloud"
+  jwt: "REDACTED"
+
+# Files that must be pinned (must match arweave.yaml anchor_targets)
+pin_targets:
+  - "glyphs/receipts/receipts.jsonl"
+  - "glyphs/anchors/*.json"
+  - "ops/manifests/spacex_stage0_manifest.yaml"
+  - "ops/manifests/spacex_stage1_manifest.yaml"
+
+# Tenant isolation
+paths:
+  xai-memphis-01: "/truth-tunnel/xai-memphis-01"
+  spacex-orbit-01: "/truth-tunnel/spacex-orbit-01"
+
+# Pinning rules
+pin_recursive: true
+pin_timeout_minutes: 20
+retry_attempts: 3

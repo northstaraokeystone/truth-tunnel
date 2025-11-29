@@ -1,0 +1,20 @@
+wallet: "/secrets/arweave_key.json"
+gateway: "https://arweave.net"
+timeout_seconds: 120
+
+tags:
+  app-name: "Truth-Tunnel"
+  version: "1.0"
+  swarm: "groot-line"
+  tenant-id: "xai-memphis-01"
+
+bundle_size_limit_bytes: 2147483648
+min_confirmations: 20
+retry_attempts: 3
+retry_backoff_seconds: 30
+
+anchor_targets:
+  - "glyphs/receipts/receipts.jsonl"
+  - "glyphs/anchors/*.json"
+  - "ops/manifests/spacex_stage0_manifest.yaml"
+  - "ops/manifests/spacex_stage1_manifest.yaml"

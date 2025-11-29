@@ -1,0 +1,265 @@
+# config/nats.toml — Canonical NATS JetStream configuration
+# This is the only place message routing is defined
+# Root hash: [BLAKE3 to be filled on commit]
+
+[server]
+listen = "0.0.0.0:4222"
+jetstream = true
+max_memory = "8G"
+max_storage = "64G"
+
+[accounts.xai-memphis-01]
+jetstream = true
+users = [{user = "swarm", password = "REDACTED"}]
+
+[jetstream]
+store_dir = "/data/nats"
+
+# === Critical Glyph Streams (permanent, replicated) ===
+
+[streams."glyph.intent"]
+subjects = ["glyph.intent.>", "xai-memphis-01.glyph.intent.>"]
+retention = "limits"
+max_msgs = -1
+max_bytes = -1
+max_age = 0
+replicas = 3
+discard = "old"
+storage = "file"
+
+[streams."glyph.receipt"]
+subjects = ["glyph.receipt.>", "xai-memphis-01.glyph.receipt.>"]
+retention = "limits"
+max_msgs = -1
+max_bytes = -1
+max_age = 0
+replicas = 3
+discard = "old"
+storage = "file"
+
+[streams."glyph.anchor"]
+subjects = ["glyph.anchor.>", "xai-memphis-01.glyph.anchor.>"]
+retention = "limits"
+max_msgs = -1
+max_bytes = -1
+max_age = 0
+replicas = 3
+discard = "old"
+storage = "file"
+
+[streams."daemon.status"]
+subjects = ["daemon.status.>", "xai-memphis-01.daemon.status.>"]
+retention = "limits"
+max_msgs = -1
+max_bytes = -1
+max_age = "168h" # 7d
+replicas = 3
+discard = "old"
+storage = "file"
+
+[streams."anomaly.critical"]
+subjects = [
+  "anomaly.critical.>",
+  "xai-memphis-01.anomaly.critical.>"
+]
+retention = "limits"
+max_msgs = 1000
+max_bytes = -1
+max_age = 0
+replicas = 3
+discard = "old"
+storage = "file"
+
+# === Subject Hierarchy (must match Eng_Arch.md semantics) ===
+# Prufrock / Rocket
+
+[streams."prufrock"]
+subjects = [
+  "prufrock.bore.cmd",
+  "prufrock.bore.anchor",
+  "prufrock.bore.receipt",
+  "prufrock.prediction.>",
+  "xai-memphis-01.prufrock.bore.cmd",
+  "xai-memphis-01.prufrock.bore.anchor",
+  "xai-memphis-01.prufrock.bore.receipt",
+  "xai-memphis-01.prufrock.prediction.>"
+]
+retention = "limits"
+max_msgs = -1
+max_bytes = -1
+max_age = 0
+replicas = 3
+discard = "old"
+storage = "file"
+
+# Orbital verification / Gamora
+
+[streams."orbital"]
+subjects = [
+  "orbital.feed.raw.>",
+  "orbital.feed.normalized.>",
+  "xai-memphis-01.orbital.feed.raw.>",
+  "xai-memphis-01.orbital.feed.normalized.>"
+]
+retention = "limits"
+max_msgs = -1
+max_bytes = -1
+max_age = 0
+replicas = 3
+discard = "old"
+storage = "file"
+
+[streams."nebula.verify"]
+subjects = [
+  "nebula.verify.in.>",
+  "nebula.verify.out.>",
+  "xai-memphis-01.nebula.verify.in.>",
+  "xai-memphis-01.nebula.verify.out.>"
+]
+retention = "limits"
+max_msgs = -1
+max_bytes = -1
+max_age = 0
+replicas = 3
+discard = "old"
+storage = "file"
+
+[streams."zk.share"]
+subjects = [
+  "zk.proof.share.>",
+  "xai-memphis-01.zk.proof.share.>"
+]
+retention = "limits"
+max_msgs = -1
+max_bytes = -1
+max_age = 0
+replicas = 3
+discard = "old"
+storage = "file"
+
+# Digital twin / Groot
+
+[streams."twin.entangle"]
+subjects = [
+  "twin.entangle.request.>",
+  "twin.entangle.result.>",
+  "xai-memphis-01.twin.entangle.request.>",
+  "xai-memphis-01.twin.entangle.result.>"
+]
+retention = "limits"
+max_msgs = -1
+max_bytes = -1
+max_age = 0
+replicas = 3
+discard = "old"
+storage = "file"
+
+[streams."twin.latency"]
+subjects = [
+  "twin.latency.negated.>",
+  "xai-memphis-01.twin.latency.negated.>"
+]
+retention = "limits"
+max_msgs = -1
+max_bytes = -1
+max_age = 0
+replicas = 3
+discard = "old"
+storage = "file"
+
+# Swarm orchestration / Yondu
+
+[streams."phase"]
+subjects = [
+  "phase.transition.*",
+  "swarm.vote.*",
+  "swarm.consensus.*",
+  "xai-memphis-01.phase.transition.*",
+  "xai-memphis-01.swarm.vote.*",
+  "xai-memphis-01.swarm.consensus.*"
+]
+retention = "limits"
+max_msgs = -1
+max_bytes = -1
+max_age = 0
+replicas = 3
+discard = "old"
+storage = "file"
+
+# Voice paging / Mantis
+
+[streams."voice.page"]
+subjects = [
+  "voice.page.critical",
+  "xai-memphis-01.voice.page.critical"
+]
+retention = "limits"
+max_msgs = 1000
+max_bytes = -1
+max_age = "24h"
+replicas = 3
+discard = "old"
+storage = "file"
+
+# Human gate acknowledgment (required after halt)
+
+[streams."human.ack"]
+subjects = [
+  "human.ack.>",
+  "xai-memphis-01.human.ack.>"
+]
+retention = "limits"
+max_msgs = 1000
+max_bytes = -1
+max_age = 0
+replicas = 3
+discard = "old"
+storage = "file"
+
+# === Queue groups for load balancing (JetStream consumers) ===
+
+[consumer."nebula-guard-verifier"]
+stream = "orbital"
+durable_name = "nebula-guard-workers"
+deliver_group = "nebula-workers"
+filter_subject = "orbital.feed.raw.>"
+ack_policy = "explicit"
+max_ack_pending = 1024
+
+[consumer."nebula-guard-verify-requests"]
+stream = "nebula.verify"
+durable_name = "nebula-verify-workers"
+deliver_group = "nebula-workers"
+filter_subject = "nebula.verify.in.>"
+ack_policy = "explicit"
+max_ack_pending = 1024
+
+[consumer."digital-twin-processor"]
+stream = "twin.entangle"
+durable_name = "twin-workers"
+deliver_group = "twin-workers"
+filter_subject = "twin.entangle.request.>"
+ack_policy = "explicit"
+max_ack_pending = 512
+
+[consumer."drax-monitor"]
+stream = "daemon.status"
+durable_name = "drax-monitor"
+deliver_all = true
+ack_policy = "none"
+
+[consumer."anomaly-consumer"]
+stream = "anomaly.critical"
+durable_name = "anomaly-workers"
+deliver_group = "anomaly-workers"
+filter_subject = "anomaly.critical.>"
+ack_policy = "explicit"
+max_ack_pending = 512
+
+[consumer."voice-page-consumer"]
+stream = "voice.page"
+durable_name = "voice-page-workers"
+deliver_group = "voice-workers"
+filter_subject = "voice.page.critical"
+ack_policy = "explicit"
+max_ack_pending = 128

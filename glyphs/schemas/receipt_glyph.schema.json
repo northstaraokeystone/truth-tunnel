@@ -1,0 +1,311 @@
+{
+  "$id": "https://truth-tunnel.org/schemas/receipt_glyph.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReceiptGlyph",
+  "description": "Minimal, verifiable proof of a single atomic event in the Truth-Tunnel swarm. Every receipt is included in exactly one AnchorGlyph.",
+  "type": "object",
+  "required": [
+    "version",
+    "receipt_id",
+    "timestamp",
+    "tenant_id",
+    "receipt_type",
+    "ref_glyph_id",
+    "result",
+    "blake3_hash",
+    "merkle_root",
+    "kyber_signature",
+    "emitted_by"
+  ],
+  "properties": {
+    "version": {
+      "const": "1.0"
+    },
+    "receipt_id": {
+      "type": "string",
+      "pattern": "^receipt-[a-f0-9]{32}$",
+      "description": "BLAKE3-derived unique identifier"
+    },
+    "timestamp": {
+      "type": "integer",
+      "description": "Unix timestamp (seconds) of event"
+    },
+    "tenant_id": {
+      "type": "string",
+      "description": "Isolated tenant namespace"
+    },
+    "receipt_type": {
+      "type": "string",
+      "enum": [
+        "bore_progress",
+        "orbital_telemetry",
+        "zk_anomaly_proof",
+        "entanglement_prediction",
+        "anomaly_detected",
+        "phase_transition",
+        "swarm_vote",
+        "compaction_complete",
+        "voice_page_sent"
+      ]
+    },
+    "ref_glyph_id": {
+      "type": "string",
+      "pattern": "^(anchor-[a-f0-9]{32}|intent-[a-f0-9]{32})$",
+      "description": "Identifier of the AnchorGlyph or IntentGlyph this receipt refers to."
+    },
+    "result": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "anomaly",
+        "fraud",
+        "rejected"
+      ],
+      "description": "Outcome classification for the referenced glyph."
+    },
+    "blake3_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Hash of canonical payload (excluding signature)."
+    },
+    "merkle_root": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "BLAKE3 Merkle root for the batch this receipt belongs to."
+    },
+    "merkle_proof": {
+      "type": "object",
+      "description": "Optional Merkle inclusion proof for this receipt.",
+      "required": [
+        "leaf_index",
+        "siblings"
+      ],
+      "properties": {
+        "leaf_index": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Zero-based index of this receipt within the Merkle tree leaf set."
+        },
+        "siblings": {
+          "type": "array",
+          "minItems": 0,
+          "description": "Ordered list of sibling hashes (hex-encoded BLAKE3) from leaf to root.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "kyber_signature": {
+      "type": "string",
+      "description": "Kyber-1024 signature over blake3_hash (and, by convention, merkle_root).",
+      "pattern": "^[a-f0-9]+$"
+    },
+    "emitted_by": {
+      "type": "string",
+      "enum": [
+        "rocket-engine",
+        "nebula-guard",
+        "digital-twin-groot",
+        "drax-metrics",
+        "mantis-community",
+        "star-lord-orchestrator",
+        "groot-swarm",
+        "ledger-explorer",
+        "spv-api"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "receipt_type": {
+            "const": "bore_progress"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "meters_advanced",
+          "cutter_head_rpm"
+        ],
+        "properties": {
+          "meters_advanced": {
+            "type": "number",
+            "minimum": 0
+          },
+          "cutter_head_rpm": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "segment_id": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "receipt_type": {
+            "const": "orbital_telemetry"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "satellite_id",
+          "signal_strength_dbm",
+          "latency_ms"
+        ],
+        "properties": {
+          "satellite_id": {
+            "type": "string"
+          },
+          "signal_strength_dbm": {
+            "type": "number"
+          },
+          "latency_ms": {
+            "type": "number",
+            "minimum": 0
+          },
+          "drift_percent": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "receipt_type": {
+            "const": "zk_anomaly_proof"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "zk_proof",
+          "public_inputs"
+        ],
+        "properties": {
+          "zk_proof": {
+            "type": "object",
+            "required": [
+              "pi_a",
+              "pi_b",
+              "pi_c"
+            ],
+            "properties": {
+              "pi_a": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "pi_b": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "pi_c": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          },
+          "public_inputs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "anomaly_hint": {
+            "type": "string",
+            "description": "Public hint only — private delta remains hidden"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "receipt_type": {
+            "const": "entanglement_prediction"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "correlation_score",
+          "predicted_negation_ms"
+        ],
+        "properties": {
+          "correlation_score": {
+            "type": "number",
+            "minimum": 0.707,
+            "maximum": 1
+          },
+          "predicted_negation_ms": {
+            "type": "number",
+            "minimum": 0
+          },
+          "bell_state": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "receipt_type": {
+            "const": "anomaly_detected"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "severity",
+          "drift_value"
+        ],
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": [
+              "warning",
+              "critical"
+            ]
+          },
+          "drift_value": {
+            "type": "number"
+          },
+          "auto_halt_triggered": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

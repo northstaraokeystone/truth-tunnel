@@ -1,0 +1,77 @@
+// glyphs/examples/anchor_glyph.example.json
+{
+  "version": "1.0",
+  "glyph_id": "anchor-425afe61baa8c720d26680c6da74f127",
+  "timestamp": 1764382500,
+  "tenant_id": "xai-memphis-01",
+  "context": "tunnel_bore",
+  "merkle_root": "133c3a251b5ef970b5be48fff704dc00a4afdf9025a387cbe000e867749f0819",
+  "blake3_hash": "2db7b07fc3148b741e124afce7c4df4ee51be0773f144fcc9e8b3fee87a0b12e",
+  "kyber_signature": {
+    "scheme": "kyber-1024",
+    "quorum_threshold": 2,
+    "quorum_observed": 2,
+    "signatures": [
+      {
+        "guardian_id": "star-lord",
+        "public_key_id": "guardian-star-lord-key-01",
+        "signature": "3238daf03affa99b00e6f67562e1fef87f5bb2e2ae4037c5265a61ceead19b8d",
+        "metadata": {
+          "role": "Star-Lord",
+          "phase": "phase2-glyph-chain"
+        }
+      },
+      {
+        "guardian_id": "gamora",
+        "public_key_id": "guardian-gamora-key-01",
+        "signature": "3a86c932598e3257108192dc3d49061ffafec8aa74a04c8df5e42d14f4de238f",
+        "metadata": {
+          "role": "Gamora",
+          "phase": "phase2-glyph-chain"
+        }
+      }
+    ],
+    "metadata": {
+      "quorum_policy": "strict",
+      "keyset_version": "v1-memphis-2025-11"
+    }
+  },
+  "previous_glyph_id": "genesis",
+  "emitted_by": "rocket-engine",
+  "receipts": [
+    {
+      "receipt_id": "receipt-eba65757773c2fbef4805aa5009fc1a5",
+      "result": "ok"
+    }
+  ],
+  "merkle_proof": {
+    "leaf_index": 0,
+    "siblings": [
+      "4bb29efe5870fad9e14dd47dc07d14a954401c22bbb1bec21aed9389b26fef0b",
+      "c1b0fe6234287101d32848933af4943f1690989fd7ef69e46eacc734d25c7a6d"
+    ]
+  },
+  "payload": {
+    "segment_id": "memphis-segment-001",
+    "tbm_id": "prufrock-01",
+    "position_m": 125.4,
+    "depth_m": 18.3,
+    "status": "advancing",
+    "geology_hint": "silty_clay"
+  },
+  "extensions": {
+    "zk": {
+      "proof_system": "groth16",
+      "proof_ref": "zk-proof-anchor-0001",
+      "public_inputs_hash": "200409119d90f4226d810c91d146c80dbd101444195cbcaa77b71e6e9339a35a",
+      "circuit_id": "orbital-tunnel-anomaly-v1"
+    },
+    "entanglement": {
+      "scenario_id": "memphis-colossus-starlink-5508",
+      "bell_correlation": 0.82,
+      "negation_ms": 0.9,
+      "sim_backend": "offline-qutip-model",
+      "model_hash": "8e4efebd1fc35334609591f13a17ad115fd5859befbe6f9a187c31d81e35f980"
+    }
+  }
+}

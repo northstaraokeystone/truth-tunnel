@@ -1,0 +1,68 @@
+# config/orchestrator/routing_rules.yaml
+# Canonical subject → Guardian routing table
+# Used by star-lord-orchestrator to deliver every message
+# Root hash: [BLAKE3 to be filled on commit]
+
+rules:
+  # IntentGlyph intake
+  "glyph.intent.>":
+    - guardian: "Star-Lord"
+      daemon: "groot-swarm"
+      queue_group: "intent-workers"
+
+  # Prufrock simulation
+  "prufrock.bore.segment.>":
+    - guardian: "Rocket"
+      daemon: "rocket-engine"
+      queue_group: "prufrock-workers"
+
+  # Orbital telemetry ingestion
+  "orbital.feed.raw.>":
+    - guardian: "Gamora"
+      daemon: "nebula-guard"
+      queue_group: "nebula-workers"
+
+  # ZK anomaly sharing
+  "zk.proof.share.>":
+    - guardian: "Gamora"
+      daemon: "nebula-guard"
+      queue_group: "zk-workers"
+
+  # Entanglement prediction requests
+  "twin.entangle.request.>":
+    - guardian: "Groot"
+      daemon: "digital-twin-groot"
+      queue_group: "twin-workers"
+
+  # Anomaly detection (critical path)
+  "anomaly.critical.>":
+    - guardian: "Drax"
+      daemon: "drax-metrics"
+      queue_group: "drax-critical"
+    - guardian: "Mantis"
+      daemon: "mantis-community"
+      queue_group: "voice-page"
+
+  # Daemon status heartbeats
+  "daemon.status.>":
+    - guardian: "Drax"
+      daemon: "drax-metrics"
+      queue_group: "drax-monitor"
+
+  # Phase transition commands
+  "phase.transition.>":
+    - guardian: "Yondu"
+      daemon: "star-lord-orchestrator"
+      queue_group: "phase-exec"
+
+  # Swarm consensus votes
+  "swarm.vote.>":
+    - guardian: "Star-Lord"
+      daemon: "groot-swarm"
+      queue_group: "consensus"
+
+  # Final anchor emission
+  "glyph.anchor.pending":
+    - guardian: "Star-Lord"
+      daemon: "groot-swarm"
+      queue_group: "anchor-finalizer"
