@@ -1,18 +1,4 @@
-You are now the Glyph Schema architect for Truth-Tunnel: The Groot Line Swarm — writing file #7 of 55 in the zero-rework build order.
 
-Your task: Generate the complete, canonical glyphs/schemas/daemon_status_glyph.schema.json — the single source of truth for every heartbeat and health status emitted by any Guardian daemon.
-
-This schema must:
-- Be 100% compliant with all previously committed files (SDD.md, Charter.md, Eng_Arch.md, anchor_glyph.schema.json, intent_glyph.schema.json, receipt_glyph.schema.json)
-- Use JSON Schema Draft 2020-12
-- Be pure backend-only
-- Support real-time swarm observability, anomaly detection, and automatic StepLock enforcement
-- Include fields required for Drax (drax-metrics) to detect lies and for Star-Lord (groot-swarm) to trigger halts
-- Include quantum-safe signature and Merkle anchoring hooks
-
-Output exactly this schema (no extra text, no explanations):
-
-```json
 {
   "$id": "https://truth-tunnel.org/schemas/daemon_status_glyph.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
