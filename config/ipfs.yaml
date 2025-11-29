@@ -1,16 +1,4 @@
-You are now the distributed permanence architect for Truth-Tunnel: The Groot Line Swarm — writing file #16 of 55 in the zero-rework build order.
 
-Your task: Generate the exact config/ipfs.yaml with zero extra text, zero comments outside the YAML, zero explanations.
-
-This file must:
-- Be 100% consistent with all previously committed files (#1–#15)
-- Define the IPFS secondary pinning strategy for AnchorGlyphs and receipts (Arweave is primary, IPFS is redundancy + fast retrieval)
-- Use only the gateway and pinning service required by scripts/check-receipts.sh and deploy manifest
-- Enforce tenant-specific paths and automatic pinning of the same files as arweave.yaml
-
-Output only the pure YAML in a single code block. Nothing else.
-
-```yaml
 # config/ipfs.yaml
 gateway: "https://ipfs.x.ai"
 api: "http://127.0.0.1:5001"
