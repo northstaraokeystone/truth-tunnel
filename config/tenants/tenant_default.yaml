@@ -1,0 +1,36 @@
+# config/tenants/tenant_default.yaml
+# Canonical default template for new tenants
+# Copy and customize for each new tenant_id
+
+tenant_id: "default-template"
+description: "Default tenant configuration — customize tenant_id and quotas"
+ledger_prefix: "default:"
+nats_subject_prefix: "default."
+ipfs_path: "/truth-tunnel/default"
+arweave_tags:
+  tenant: "default-template"
+  site: "template"
+  environment: "template"
+storage_quota_bytes: 1073741824  # 1 GiB starter quota
+allowed_guardians:
+  - "Star-Lord"
+  - "Gamora"
+  - "Rocket"
+  - "Groot"
+  - "Drax"
+  - "Nebula"
+  - "Mantis"
+  - "Yondu"
+  - "Kraglin"
+allowed_daemons:
+  - "groot-swarm"
+  - "rocket-engine"
+  - "nebula-guard"
+  - "digital-twin-groot"
+  - "drax-metrics"
+  - "mantis-community"
+  - "star-lord-orchestrator"
+  - "ledger-explorer"
+  - "spv-api"
+  - "portal-zero"
+allowed_phases: [1, 2, 3, 4, 5, 6, 7]
