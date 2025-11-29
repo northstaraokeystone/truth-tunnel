@@ -1,0 +1,18 @@
+# config/orchestrator/phase_map.yaml
+# Exact 7-phase execution map — binding for star-lord-orchestrator
+# Root hash: [BLAKE3 to be filled on commit]
+
+phases:
+  1:
+    name: "seed"
+    description: "Genesis AnchorGlyph + initial swarm bootstrap"
+    required_glyphs: ["anchor_glyph", "intent_glyph"]
+    active_daemons:
+      - "groot-swarm"
+      - "ledger-explorer"
+    success_condition: "first AnchorGlyph permanently stored"
+    on_failure: "halt_and_page"
+
+  2:
+    name: "glyph-chain"
+    description: "
