@@ -1,0 +1,141 @@
+You are now the Glyph Schema architect for Truth-Tunnel: The Groot Line Swarm — writing file #7 of 55 in the zero-rework build order.
+
+Your task: Generate the complete, canonical glyphs/schemas/daemon_status_glyph.schema.json — the single source of truth for every heartbeat and health status emitted by any Guardian daemon.
+
+This schema must:
+- Be 100% compliant with all previously committed files (SDD.md, Charter.md, Eng_Arch.md, anchor_glyph.schema.json, intent_glyph.schema.json, receipt_glyph.schema.json)
+- Use JSON Schema Draft 2020-12
+- Be pure backend-only
+- Support real-time swarm observability, anomaly detection, and automatic StepLock enforcement
+- Include fields required for Drax (drax-metrics) to detect lies and for Star-Lord (groot-swarm) to trigger halts
+- Include quantum-safe signature and Merkle anchoring hooks
+
+Output exactly this schema (no extra text, no explanations):
+
+```json
+{
+  "$id": "https://truth-tunnel.org/schemas/daemon_status_glyph.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DaemonStatusGlyph",
+  "description": "Periodic, signed heartbeat from a Guardian daemon. Used for liveness, SLO compliance, and automatic anomaly detection. One emitted per daemon per 30-second interval.",
+  "type": "object",
+  "required": [
+    "version",
+    "glyph_id",
+    "timestamp",
+    "daemon_name",
+    "guardian",
+    "status",
+    "blake3_hash",
+    "kyber_signature",
+    "uptime_seconds",
+    "glyphs_emitted",
+    "slo_compliance"
+  ],
+  "properties": {
+    "version": { "const": "1.0" },
+    "glyph_id": {
+      "type": "string",
+      "pattern": "^status-[a-f0-9]{32}$",
+      "description": "BLAKE3-derived unique identifier"
+    },
+    "timestamp": {
+      "type": "integer",
+      "description": "Unix timestamp (seconds) of this status"
+    },
+    "daemon_name": {
+      "type": "string",
+      "enum": [
+        "groot-swarm",
+        "glyph-lib",
+        "rocket-engine",
+        "spv-api",
+        "digital-twin-groot",
+        "portal-zero",
+        "ledger-explorer",
+        "star-lord-orchestrator",
+        "mantis-community",
+        "nebula-guard",
+        "drax-metrics"
+      ]
+    },
+    "guardian": {
+      "type": "string",
+      "enum": [
+        "Star-Lord",
+        "Gamora",
+        "Rocket",
+        "Groot",
+        "Drax",
+        "Nebula",
+        "Mantis",
+        "Yondu",
+        "Kraglin"
+      ],
+      "description": "Human-accountable Guardian owning this daemon"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["healthy", "degraded", "critical", "halted"],
+      "description": "Overall daemon health"
+    },
+    "blake3_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "kyber_signature": {
+      "type": "string",
+      "description": "Kyber-1024 signature over blake3_hash"
+    },
+    "uptime_seconds": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "glyphs_emitted": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total AnchorGlyphs + ReceiptGlyphs emitted since startup"
+    },
+    "last_anchor_glyph_id": {
+      "type": ["string", "null"],
+      "pattern": "^anchor-[a-f0-9]{32}`\(|^null\)`"
+    },
+    "slo_compliance": {
+      "type": "object",
+      "required": ["latency_p95_ms", "entanglement_quality", "zk_proof_time_ms", "anomaly_rate_per_hour"],
+      "properties": {
+        "latency_p95_ms": {
+          "type": "number",
+          "description": "p95 end-to-end latency (soil↔orbit) over last 5 minutes"
+        },
+        "entanglement_quality": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Current Bell correlation score from digital-twin-groot"
+        },
+        "zk_proof_time_ms": {
+          "type": ["number", "null"],
+          "description": "Average Groth16 proof generation time (null if not applicable)"
+        },
+        "anomaly_rate_per_hour": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Critical anomalies detected in last hour"
+        }
+      },
+      "additionalProperties": false
+    },
+    "active_phase": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 7,
+      "description": "Current phase from daemons/phase*.yaml"
+    },
+    "self_diagnosed_lie": {
+      "type": "boolean",
+      "description": "If true, daemon has detected its own inconsistency — triggers immediate halt"
+    }
+  },
+  "additionalProperties": false
+}
