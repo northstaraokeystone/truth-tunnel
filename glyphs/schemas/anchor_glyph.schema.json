@@ -1,0 +1,500 @@
+{
+  "$id": "https://truth-tunnel.org/schemas/anchor_glyph.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AnchorGlyph",
+  "description": "Immutable, cryptographically anchored artifact representing a verified state transition in the Truth-Tunnel swarm. Single source of truth for both terrestrial boring and orbital verification phases.",
+  "type": "object",
+  "required": [
+    "version",
+    "glyph_id",
+    "timestamp",
+    "tenant_id",
+    "context",
+    "merkle_root",
+    "blake3_hash",
+    "kyber_signature",
+    "previous_glyph_id",
+    "emitted_by",
+    "receipts"
+  ],
+  "properties": {
+    "version": {
+      "const": "1.0",
+      "description": "Schema version for AnchorGlyph. Bump only with explicit migration."
+    },
+    "glyph_id": {
+      "type": "string",
+      "pattern": "^anchor-[a-f0-9]{32}$",
+      "description": "BLAKE3-derived unique identifier for this AnchorGlyph."
+    },
+    "timestamp": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Unix timestamp (seconds since epoch, UTC) when this anchor was emitted."
+    },
+    "tenant_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Isolated tenant namespace. Must correspond to a tenant declared in config/tenants/*.yaml."
+    },
+    "context": {
+      "type": "string",
+      "enum": [
+        "tunnel_bore",
+        "orbital_verify",
+        "zk_anomaly_share",
+        "entanglement_prediction"
+      ],
+      "description": "Discriminator for polymorphic validation across tunnel boring, orbital verification, private anomaly sharing, and entanglement prediction."
+    },
+    "merkle_root": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "BLAKE3 Merkle root of the receipt batch associated with this anchor."
+    },
+    "blake3_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "BLAKE3 hash of the canonical JSON representation of this AnchorGlyph, excluding Kyber signatures and external anchors."
+    },
+    "kyber_signature": {
+      "type": "object",
+      "description": "Quantum-resistant signature bundle attesting to quorum agreement over this AnchorGlyph, using Kyber-1024 or successor schemes.",
+      "required": [
+        "scheme",
+        "quorum_threshold",
+        "quorum_observed",
+        "signatures"
+      ],
+      "properties": {
+        "scheme": {
+          "type": "string",
+          "enum": [
+            "kyber-1024",
+            "kyber-1024-compatible"
+          ],
+          "description": "Declared KEM/signature scheme used for this bundle."
+        },
+        "quorum_threshold": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Minimum number of distinct guardian signatures required for valid quorum."
+        },
+        "quorum_observed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of distinct guardian signatures actually present in this bundle."
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Per-guardian signature entries over blake3_hash and merkle_root.",
+          "items": {
+            "type": "object",
+            "required": [
+              "guardian_id",
+              "public_key_id",
+              "signature"
+            ],
+            "properties": {
+              "guardian_id": {
+                "type": "string",
+                "description": "Logical guardian emitting this signature (e.g., star-lord, gamora, rocket, groot, drax, nebula, mantis, yondu, kraglin)."
+              },
+              "public_key_id": {
+                "type": "string",
+                "description": "Identifier for the Kyber public key used; must map to config/agents/*.yaml."
+              },
+              "signature": {
+                "type": "string",
+                "description": "Opaque Kyber-1024-compatible signature bytes, base64 or hex encoded."
+              },
+              "metadata": {
+                "type": "object",
+                "description": "Optional additional fields for future PQ schemes and thresholds.",
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Optional extensible metadata for PQ evolution, algorithm parameters, or migration state.",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "previous_glyph_id": {
+      "type": "string",
+      "pattern": "^(anchor-[a-f0-9]{32}|genesis)$",
+      "description": "Identifier of the previous AnchorGlyph in the logical chain, or 'genesis' for the first anchor in a stream."
+    },
+    "emitted_by": {
+      "type": "string",
+      "enum": [
+        "groot-swarm",
+        "nebula-guard",
+        "rocket-engine",
+        "digital-twin-groot",
+        "drax-metrics",
+        "spv-api",
+        "mantis-community",
+        "star-lord-orchestrator",
+        "ledger-explorer",
+        "portal-zero"
+      ],
+      "description": "Daemon/crate responsible for emitting this AnchorGlyph."
+    },
+    "receipts": {
+      "type": "array",
+      "minItems": 0,
+      "description": "Compact references to ReceiptGlyphs associated with this AnchorGlyph; proofs and detailed payloads are stored in the receipt stream.",
+      "items": {
+        "type": "object",
+        "required": [
+          "receipt_id",
+          "result"
+        ],
+        "properties": {
+          "receipt_id": {
+            "type": "string",
+            "pattern": "^receipt-[a-f0-9]{32}$",
+            "description": "Identifier of the associated ReceiptGlyph."
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "anomaly",
+              "fraud",
+              "rejected"
+            ],
+            "description": "Outcome classification recorded by the verification engine."
+          },
+          "merkle_root": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "description": "Optional override of the Merkle root for this specific receipt if it participates in a different window."
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Optional extension for receipt-specific annotations.",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "merkle_proof": {
+      "type": "object",
+      "description": "Optional explicit Merkle inclusion proof for this AnchorGlyph within a larger batch, suitable for SPV verification.",
+      "required": [
+        "leaf_index",
+        "siblings"
+      ],
+      "properties": {
+        "leaf_index": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Zero-based index of this glyph within the Merkle tree leaf set."
+        },
+        "siblings": {
+          "type": "array",
+          "minItems": 0,
+          "description": "Ordered list of sibling hashes (hex-encoded BLAKE3) from leaf to root.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "payload": {
+      "type": "object",
+      "description": "Context-specific, canonical payload describing the state transition anchored by this glyph. Structure is constrained by the 'context' discriminator but remains extensible.",
+      "additionalProperties": true
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Forward-compatible container for ZK, entanglement, and other future extensions. All fields are optional and must not change the meaning of existing properties.",
+      "properties": {
+        "zk": {
+          "type": "object",
+          "description": "Groth16 or related zero-knowledge proof metadata associated with this anchor (private anomaly shares, circuit IDs, etc.).",
+          "properties": {
+            "proof_system": {
+              "type": "string",
+              "enum": [
+                "groth16",
+                "groth16-compatible"
+              ],
+              "description": "ZK proof system used for private anomaly share validation."
+            },
+            "proof_ref": {
+              "type": "string",
+              "description": "Reference to an external ZK proof artifact or ZKAnomalyGlyph ID."
+            },
+            "public_inputs_hash": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "description": "BLAKE3 hash of public circuit inputs; private deltas must never appear here in plaintext."
+            },
+            "circuit_id": {
+              "type": "string",
+              "description": "Identifier for the ZK circuit used to validate this anomaly or state."
+            }
+          },
+          "additionalProperties": true
+        },
+        "entanglement": {
+          "type": "object",
+          "description": "Optional entanglement and latency prediction metadata derived from offline quantum simulation.",
+          "properties": {
+            "scenario_id": {
+              "type": "string",
+              "description": "Identifier for the Memphis↔orbit scenario modeled by the entanglement engine."
+            },
+            "bell_correlation": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0,
+              "description": "Correlation score (Bell/CHSH-style) used to judge entanglement model coherence."
+            },
+            "negation_ms": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "Effective latency reduction (in milliseconds) achieved by predictive modeling; must not represent faster-than-light communication."
+            },
+            "sim_backend": {
+              "type": "string",
+              "description": "Simulation backend used (e.g., qcgpu-rust, offline-qutip-model)."
+            },
+            "model_hash": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "description": "BLAKE3 hash of the entanglement model parameters used."
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "context": {
+            "const": "tunnel_bore"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "required": [
+              "segment_id",
+              "tbm_id",
+              "position_m",
+              "depth_m",
+              "status"
+            ],
+            "properties": {
+              "segment_id": {
+                "type": "string",
+                "description": "Identifier of the tunnel segment being bored."
+              },
+              "tbm_id": {
+                "type": "string",
+                "description": "Identifier of the TBM (Prufrock) producing this anchor."
+              },
+              "position_m": {
+                "type": "number",
+                "description": "Longitudinal position of the TBM along the planned alignment in meters."
+              },
+              "depth_m": {
+                "type": "number",
+                "description": "Depth of the TBM or tunnel section below surface in meters."
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "starting",
+                  "advancing",
+                  "paused",
+                  "completed",
+                  "fault"
+                ],
+                "description": "Current state of the TBM/tunnel operation for this anchor."
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "context": {
+            "const": "orbital_verify"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "required": [
+              "orbit_slot",
+              "sat_id",
+              "link_id",
+              "measurement"
+            ],
+            "properties": {
+              "orbit_slot": {
+                "type": "string",
+                "description": "Logical orbital slot or ground track identifier relevant to this verification."
+              },
+              "sat_id": {
+                "type": "string",
+                "description": "Satellite identifier (e.g., Starlink node) involved in this anchor."
+              },
+              "link_id": {
+                "type": "string",
+                "description": "Identifier of the link or path being verified (e.g., ground↔LEO, LEO↔LEO)."
+              },
+              "measurement": {
+                "type": "object",
+                "required": [
+                  "drift_mm",
+                  "snr_db",
+                  "rtt_ms"
+                ],
+                "properties": {
+                  "drift_mm": {
+                    "type": "number",
+                    "description": "Observed drift in millimeters relative to expected orbit or beam position."
+                  },
+                  "snr_db": {
+                    "type": "number",
+                    "description": "Signal-to-noise ratio (dB) for the link at the time of measurement."
+                  },
+                  "rtt_ms": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "description": "Measured round-trip time in milliseconds."
+                  }
+                },
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "context": {
+            "const": "zk_anomaly_share"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "required": [
+              "anomaly_id",
+              "anomaly_class",
+              "public_inputs_hash",
+              "model_version_id"
+            ],
+            "properties": {
+              "anomaly_id": {
+                "type": "string",
+                "description": "Identifier for the anomaly this share relates to."
+              },
+              "anomaly_class": {
+                "type": "string",
+                "description": "High-level anomaly classification (e.g., thermal_spike, timing_drift)."
+              },
+              "public_inputs_hash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "description": "BLAKE3 hash over public inputs to the ZK circuit; must not encode private deltas directly."
+              },
+              "model_version_id": {
+                "type": "string",
+                "description": "Identifier of the local anomaly model version used to generate this share."
+              },
+              "zk_proof_ref": {
+                "type": "string",
+                "description": "Optional reference to a ZKAnomalyGlyph or proof artifact containing the actual Groth16 proof."
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "context": {
+            "const": "entanglement_prediction"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "required": [
+              "scenario_id",
+              "bell_correlation",
+              "negation_ms",
+              "sim_backend",
+              "model_hash"
+            ],
+            "properties": {
+              "scenario_id": {
+                "type": "string",
+                "description": "Identifier for the Memphis↔orbit scenario under entanglement prediction."
+              },
+              "bell_correlation": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0,
+                "description": "Correlation metric between predicted and observed outcomes; used for physics sanity checks."
+              },
+              "negation_ms": {
+                "type": "number",
+                "minimum": 0.0,
+                "description": "Effective latency reduction in milliseconds, derived from predictive correlations under physical latency."
+              },
+              "sim_backend": {
+                "type": "string",
+                "description": "Simulation backend or engine used (must map to an implementation in digital-twin-groot/glyph-lib)."
+              },
+              "model_hash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "description": "BLAKE3 hash of the entanglement model parameters for reproducible simulation."
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": true
+}
