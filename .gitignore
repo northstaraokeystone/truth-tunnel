@@ -1,0 +1,39 @@
+# Rust/Cargo
+/target
+Cargo.lock
+
+# Config/Secrets
+.env
+.env.*
+!.env.example
+/config/*.env
+/config/*.env.*
+!/config/*.env.example
+/config/*local*.*
+/config/*secret*.*
+
+# Data/Ledger
+/data/ledger/**
+!/data/ledger/**/.gitkeep
+/data/tmp/
+/data/**/tmp/
+/data/**/log*
+/tmp/
+*.log
+
+# Glyphs (runtime only)
+/glyphs/**/out/
+/glyphs/**/output/
+/glyphs/**/outputs/
+/glyphs/**/cache/
+/glyphs/**/tmp/
+
+# IDE/Editor
+.vscode/
+/.idea/
+*.iml
+*.code-workspace
+
+# OS/Platform
+.DS_Store
+Thumbs.db
