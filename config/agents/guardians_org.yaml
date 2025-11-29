@@ -1,0 +1,57 @@
+# config/agents/guardians_org.yaml
+# Human accountability map — Nov 29 2025
+# Any change requires IntentGlyph signed by Star-Lord + 3 others
+
+Star-Lord:
+  human: "Elon Musk"
+  daemon: "groot-swarm"
+  scope: "final_arbiter"
+  signs_intents: true
+
+Gamora:
+  human: "Gwynne Shotwell"
+  daemon: "nebula-guard"
+  scope: "quantum_verification_zk"
+  signs_intents: true
+
+Rocket:
+  human: "Steve Davis"
+  daemon: "rocket-engine"
+  scope: "prufrock_simulation"
+  signs_intents: true
+
+Groot:
+  human: "Lars Blackmore"
+  daemon: "digital-twin-groot"
+  scope: "entanglement_latency_negation"
+  signs_intents: true
+
+Drax:
+  human: "Bret Johnsen"
+  daemon: "drax-metrics"
+  scope: "lie_detection"
+  signs_intents: true
+
+Nebula:
+  human: "Ashley Clarke"
+  daemon: "spv-api"
+  scope: "external_proofs"
+  signs_intents: false
+
+Mantis:
+  human: "TBA-Memphis"
+  daemon: "mantis-community"
+  scope: "voice_paging_community"
+  signs_intents: false
+
+Yondu:
+  human: "Jared Birchall"
+  daemon: "star-lord-orchestrator"
+  scope: "phase_transitions"
+  signs_intents: true
+
+Kraglin:
+  human: "Tim Zaman"
+  daemon: "ledger-explorer"
+  scope: "permanent_provenance"
+  signs_intents: true
