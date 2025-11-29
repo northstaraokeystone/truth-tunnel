@@ -1,0 +1,50 @@
+# config/slo.toml — Binding Service Level Objectives
+# Violation of any critical SLO triggers immediate swarm halt
+# Root hash: [BLAKE3 to be filled on commit]
+
+[global]
+# End-to-end from IntentGlyph submission to AnchorGlyph permanence
+max_e2e_latency_ms = 950          # p95 over 5-minute window
+max_anomaly_rate_per_hour = 0.1   # Critical anomalies (Drax)
+
+[ledger]
+min_append_throughput_per_sec = 50
+max_compaction_lag_seconds = 300
+
+[nebula-guard]
+# Orbital verification + ZK
+max_verification_latency_ms = 400
+max_zk_proof_generation_ms = 1200   # Groth16 offline budget
+min_kyber_verify_per_second = 120
+max_drift_percent = 0.02            # Orbital signal drift before anomaly
+
+[digital-twin-groot]
+# Quantum entanglement simulation
+min_entanglement_correlation = 0.707   # Bell inequality threshold
+min_predicted_latency_negation_ms = 1.8 # Target negation of 2.3 ms LEO latency
+max_simulation_cycle_ms = 800
+
+[rocket-engine]
+# Prufrock boring simulation
+min_meters_per_hour = 180
+max_prediction_error_percent = 3.0
+
+[mantis-community]
+# Voice paging on critical anomaly
+max_page_delivery_seconds = 12
+
+[drax-metrics]
+# Self-diagnostics
+daemon_status_interval_seconds = 30
+max_missing_statuses = 2            # Consecutive → daemon declared dead
+
+[halts]
+# Automatic emergency halt triggers (emits emergency_halt IntentGlyph)
+e2e_latency_breached_ms = 1500
+anomaly_rate_breached = 1.0
+entanglement_below_threshold = 0.65
+zk_proof_time_breached_ms = 3000
+missing_statuses_breached = 4
+
+# Human gate required to resume after any halt
+require_human_acknowledgment = true
