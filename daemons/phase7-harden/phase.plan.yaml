@@ -1,0 +1,52 @@
+# daemons/phase7-harden/phase.plan.yaml
+# Phase 7: Harden — Red-loop compaction + death criteria enforcement
+# Root hash: [BLAKE3 to be filled on commit]
+
+phase: 7
+name: "harden"
+description: "Run full Tesla 7-day red-loop compaction. Enforce death criteria. Self-certify production readiness. Emit final shipping_receipt."
+
+required_glyphs:
+  - "compaction_complete"   # From drax-metrics / ledger-explorer red-loop
+  - "shipping_receipt"      # Final swarm certification (ReceiptGlyph)
+  - "anchor_glyph"          # Hardened chain root
+  - "daemon_status_glyph"   # Health from all core daemons
+  - "anomaly_detected"      # For any violation during hardening window
+
+active_daemons:
+  - "drax-metrics"
+  - "ledger-explorer"
+  - "groot-swarm"
+  - "star-lord-orchestrator"
+  - "nebula-guard"
+  - "digital-twin-groot"
+  - "rocket-engine"
+  - "spv-api"
+  - "mantis-community"
+
+validation_steps:
+  - "Confirm phases 1–6 success conditions and phase_transition ReceiptGlyphs are anchored and provable via ledger-explorer (genesis, glyph-chain, ledger, digital-twin, orchestrator, ops)"
+  - "Trigger scripts/weekly_red_loop_compaction.rs for all tenants, using config/ledger.sqlite.toml and config/ledger.rocksdb.toml for hot/cold storage"
+  - "Emit compaction_complete ReceiptGlyphs for each compacted range and anchor them via groot-swarm into new AnchorGlyphs"
+  - "Verify via ledger-explorer that all post-compaction receipts and anchors have valid Merkle roots and Kyber signatures and that no ranges are orphaned"
+  - "Enforce death_criteria from docs/death_criteria.md and docs/UnfinishedManifesto.md (e.g., sustained entanglement_negation_ms <1.8, entanglement correlation <0.707, unverified orbital feeds, anomaly_rate > global SLO)"
+  - "Run full end-to-end path: IntentGlyph → bore_progress + orbital_telemetry → zk_anomaly_proof → entanglement_prediction → AnchorGlyph → external SPV proof via spv-api → voice_page_sent via mantis-community"
+  - "Validate ZK proof latencies, entanglement correlation and predicted_negation_ms, orbital drift, and external SPV proofs all meet SLOs from config/slo.toml"
+  - "Hold the swarm under full synthetic and/or live load for at least 24 hours with all global and per-daemon SLOs green (latency, anomaly_rate, compaction_lag, page_delivery_seconds)"
+  - "Compute VIH impact scoring via drax-metrics for the production configuration; require VIH ≥0.96 and no Drax veto on anomalies or bias/disparity audits"
+  - "Emit final shipping_receipt ReceiptGlyph from groot-swarm referencing the hardened AnchorGlyph set and 24h SLO window; anchor it to Arweave/IPFS via scripts/check-receipts.sh and config/arweave.yaml"
+  - "Verify that external clients can retrieve SPV proofs for the shipping_receipt and compaction_complete ranges via spv-api and validate them using only public data"
+  - "Emit DaemonStatusGlyph from all active daemons (drax-metrics, ledger-explorer, groot-swarm, star-lord-orchestrator, nebula-guard, digital-twin-groot, rocket-engine, spv-api, mantis-community) confirming hardening state and reporting final metrics snapshot"
+
+success_condition: "System self-certifies ready for production: compaction_complete glyphs anchored, shipping_receipt anchored and provable via ledger-explorer and spv-api, 24h of continuous SLO compliance, and no death_criteria triggered"
+
+rollback_conditions:
+  - "Red-loop compaction failure (compaction_complete missing or inconsistent ranges) → rollback to phase 6 ops state, mark storage as degraded, and block new phase transitions"
+  - "Death criteria triggered (e.g., sustained entanglement_negation_ms <1.8 for configured window, entanglement correlation <0.707 in critical scenarios, unverified orbital feeds from nebula-guard, anomaly_rate > max_anomaly_rate_per_hour) → full deorbit plan: stop all phase advancement and prepare rollback to phase 1 genesis under human supervision"
+  - "End-to-end test failure (IntentGlyph → entanglement → ZK share → external proof → voice page) → switch all daemons to shadow mode for new traffic and remain in phase 7 hardening until tests pass"
+  - "24h SLO run shows any critical SLO breach (e2e latency, anomaly rate, compaction lag, page delivery, ZK or entanglement SLOs) → extend hardening window, emit anomaly_detected, and require new hardening cycle"
+  - "shipping_receipt AnchorGlyph or compaction_complete proofs fail Merkle/Kyber verification via ledger-explorer → quarantine affected AnchorGlyphs, invalidate shipping_receipt, and rollback to previous safe phase 6 state"
+
+on_success: "Emit shipping_receipt, mark phase 7 as complete via phase_transition ReceiptGlyph, and transition into steady-state ops under the hardened configuration"
+
+on_failure: "Full deorbit path: Emit emergency_halt IntentGlyph via groot-swarm, mantis-community voice page to on-call humans, freeze all new ledger writes, and prepare controlled destruction or archive of active ledgers according to death_criteria"

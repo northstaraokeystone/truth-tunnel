@@ -1,0 +1,17 @@
+[package]
+name = "rocket-engine"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { workspace = true, features = ["full"] }
+serde_json = { workspace = true }
+nats = { workspace = true }
+blake3 = { workspace = true }
+pqcrypto-kyber = { workspace = true }
+anyhow = { workspace = true }
+ndarray = { version = "0.15", optional = true }
+
+[features]
+default = ["sim"]
+sim = ["ndarray"]

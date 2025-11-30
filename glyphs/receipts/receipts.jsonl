@@ -1,0 +1,265 @@
+#!/bin/bash
+set -euo pipefail
+
+# scripts/nats-bootstrap.sh
+# Start NATS JetStream + seed subjects/streams from config
+# Usage: ./scripts/nats-bootstrap.sh [--dry-run]
+
+DRY_RUN=false
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --dry-run)
+      DRY_RUN=true
+      shift
+      ;;
+    *)
+      echo "Unknown arg: $1" >&2
+      exit 1
+      ;;
+  esac
+done
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "${ROOT_DIR}"
+
+NATS_CONFIG="config/nats.toml"
+ROUTING_RULES="config/orchestrator/routing_rules.yaml"
+
+if [ ! -f "${NATS_CONFIG}" ]; then
+  echo "NATS config missing: ${NATS_CONFIG}" >&2
+  exit 1
+fi
+
+TENANT_ID="${TENANT_ID:-xai-memphis-01}"
+NATS_BOOTSTRAP_SUBJECT="${NATS_BOOTSTRAP_SUBJECT:-glyph.receipt.bootstrap}"
+
+if ! command -v nats-server >/dev/null 2>&1; then
+  echo "nats-server binary not found in PATH" >&2
+  exit 1
+fi
+
+if ! command -v nats >/dev/null 2>&1; then
+  echo "warning: nats CLI not found; bootstrap_receipt will be printed to stdout only" >&2
+fi
+
+start_nats() {
+  if [ "${DRY_RUN}" = "true" ]; then
+    return 0
+  fi
+
+  nats-server -c "${NATS_CONFIG}" >/dev/null 2>&1 &
+  NATS_PID=$!
+  export NATS_PID
+  sleep 3
+
+  if ! nats --server "${NATS_URL:-nats://127.0.0.1:4222}" info >/dev/null 2>&1; then
+    echo "NATS startup failed" >&2
+    if [ -n "${NATS_PID}" ]; then
+      kill "${NATS_PID}" >/dev/null 2>&1 || true
+    fi
+    exit 1
+  fi
+}
+
+stop_nats() {
+  if [ "${DRY_RUN}" = "true" ]; then
+    return 0
+  fi
+  if [ -n "${NATS_PID:-}" ]; then
+    kill "${NATS_PID}" >/dev/null 2>&1 || true
+  fi
+}
+
+seed_stream() {
+  name="$1"
+  subjects="$2"
+
+  if [ "${DRY_RUN}" = "true" ]; then
+    echo "DRY-RUN: would create stream '${name}' with subjects: ${subjects}" >&2
+    return 0
+  fi
+
+  nats --server "${NATS_URL:-nats://127.0.0.1:4222}" stream add "${name}" \
+    --subjects "${subjects}" \
+    --retention limits \
+    --max-msgs=-1 \
+    --max-bytes=-1 \
+    --discard old \
+    --dupe-window=2m >/dev/null 2>&1 || true
+}
+
+seed_consumer() {
+  stream="$1"
+  durable="$2"
+  filter_subject="$3"
+  deliver_group="$4"
+
+  if [ "${DRY_RUN}" = "true" ]; then
+    echo "DRY-RUN: would create consumer '${durable}' on stream '${stream}' filter='${filter_subject}' group='${deliver_group}'" >&2
+    return 0
+  fi
+
+  args="--deliver-group ${deliver_group} --ack explicit"
+  nats --server "${NATS_URL:-nats://127.0.0.1:4222}" consumer add "${stream}" "${durable}" \
+    --filter-subject "${filter_subject}" \
+    ${args} >/dev/null 2>&1 || true
+}
+
+parse_stream_subjects_from_toml() {
+  name="$1"
+  awk -v s="${name}" '
+    BEGIN { in_stream=0 }
+    /^\[streams\.".*"\]/ {
+      in_stream = 0
+      if ($0 ~ "\\[streams\\.\"" s "\"\\]") in_stream=1
+    }
+    in_stream && /^subjects[[:space:]]*=/ {
+      sub(/^[^=]*=/,"")
+      gsub(/[][",]/,"")
+      gsub(/[[:space:]]+/," ")
+      gsub(/^ +| +$/,"")
+      print
+    }
+  ' "${NATS_CONFIG}"
+}
+
+seed_streams_from_config() {
+  streams_seeded=0
+
+  for stream_name in glyph.intent glyph.receipt glyph.anchor daemon.status anomaly.critical human.ack; do
+    subjects="$(parse_stream_subjects_from_toml "${stream_name}")"
+    if [ -n "${subjects}" ]; then
+      seed_stream "${stream_name}" "${subjects}"
+      streams_seeded=$((streams_seeded + 1))
+    fi
+  done
+
+  echo "${streams_seeded}"
+}
+
+seed_consumers_from_routing() {
+  if [ ! -f "${ROUTING_RULES}" ]; then
+    echo "Routing rules missing: ${ROUTING_RULES}" >&2
+    echo "0"
+    return 0
+  fi
+
+  consumers_seeded=0
+
+  while IFS= read -r line; do
+    case "${line}" in
+      \ *\"*\":)
+        subject="$(printf '%s\n' "${line}" | sed -e 's/^[[:space:]]*"\(.*\)".*$/\1/')"
+        case "${subject}" in
+          glyph.intent.*)
+            seed_consumer "glyph.intent" "intent-workers" "${subject}" "intent-workers"
+            consumers_seeded=$((consumers_seeded + 1))
+            ;;
+          prufrock.bore.*|prufrock.prediction.*)
+            seed_consumer "glyph.receipt" "prufrock-workers" "${subject}" "prufrock-workers"
+            consumers_seeded=$((consumers_seeded + 1))
+            ;;
+          orbital.feed.raw.*)
+            seed_consumer "glyph.receipt" "nebula-guard-workers" "${subject}" "nebula-workers"
+            consumers_seeded=$((consumers_seeded + 1))
+            ;;
+          zk.proof.share.*)
+            seed_consumer "glyph.receipt" "zk-workers" "${subject}" "zk-workers"
+            consumers_seeded=$((consumers_seeded + 1))
+            ;;
+          twin.entangle.request.*)
+            seed_consumer "glyph.receipt" "twin-workers" "${subject}" "twin-workers"
+            consumers_seeded=$((consumers_seeded + 1))
+            ;;
+          anomaly.critical.*)
+            seed_consumer "anomaly.critical" "drax-critical" "${subject}" "drax-critical"
+            consumers_seeded=$((consumers_seeded + 1))
+            ;;
+          daemon.status.*)
+            seed_consumer "daemon.status" "drax-monitor" "${subject}" "drax-monitor"
+            consumers_seeded=$((consumers_seeded + 1))
+            ;;
+          phase.transition.*)
+            seed_consumer "glyph.receipt" "phase-exec" "${subject}" "phase-exec"
+            consumers_seeded=$((consumers_seeded + 1))
+            ;;
+          swarm.vote.*)
+            seed_consumer "glyph.receipt" "consensus" "${subject}" "consensus"
+            consumers_seeded=$((consumers_seeded + 1))
+            ;;
+          voice.page.critical)
+            seed_consumer "glyph.receipt" "voice-page" "${subject}" "voice-page"
+            consumers_seeded=$((consumers_seeded + 1))
+            ;;
+        esac
+        ;;
+    esac
+  done < "${ROUTING_RULES}"
+
+  echo "${consumers_seeded}"
+}
+
+emit_bootstrap_receipt() {
+  streams_seeded="$1"
+  consumers_seeded="$2"
+  timestamp="$(date +%s)"
+
+  receipt_id_hash="$(printf 'bootstrap-%s-%s-%s' "${timestamp}" "${streams_seeded}" "${consumers_seeded}" | blake3 2>/dev/null || echo "")"
+  if [ -n "${receipt_id_hash}" ]; then
+    receipt_id="receipt-${receipt_id_hash}"
+  else
+    receipt_id="receipt-bootstrap-${timestamp}"
+  fi
+
+  payload="$(printf '{"version":"1.0","receipt_id":"%s","timestamp":%s,"tenant_id":"%s","receipt_type":"bootstrap_complete","emitted_by":"groot-swarm","streams_seeded":%s,"consumers_seeded":%s}' \
+    "${receipt_id}" \
+    "${timestamp}" \
+    "${TENANT_ID}" \
+    "${streams_seeded}" \
+    "${consumers_seeded}")"
+
+  if command -v nats >/dev/null 2>&1 && [ "${DRY_RUN}" = "false" ]; then
+    printf '%s\n' "${payload}" | nats pub "${NATS_BOOTSTRAP_SUBJECT}" - >/dev/null
+  else
+    printf '%s\n' "${payload}"
+  fi
+}
+
+emit_anomaly_receipt() {
+  reason="$1"
+  timestamp="$(date +%s)"
+  payload="$(printf '{"version":"1.0","receipt_id":"receipt-bootstrap-anomaly-%s","timestamp":%s,"tenant_id":"%s","receipt_type":"anomaly_detected","emitted_by":"groot-swarm","reason":"%s"}' \
+    "${timestamp}" \
+    "${timestamp}" \
+    "${TENANT_ID}" \
+    "${reason}")"
+
+  if command -v nats >/dev/null 2>&1 && [ "${DRY_RUN}" = "false" ]; then
+    printf '%s\n' "${payload}" | nats pub "anomaly.critical.bootstrap" - >/dev/null
+  else
+    printf '%s\n' "${payload}"
+  fi
+}
+
+trap 'stop_nats' EXIT
+
+start_nats
+
+streams_seeded="$(seed_streams_from_config)" || {
+  emit_anomaly_receipt "stream_seed_failure"
+  exit 1
+}
+
+consumers_seeded="$(seed_consumers_from_routing)" || {
+  emit_anomaly_receipt "consumer_seed_failure"
+  exit 1
+}
+
+emit_bootstrap_receipt "${streams_seeded}" "${consumers_seeded}"
+
+if [ "${DRY_RUN}" = "true" ]; then
+  echo "Dry-run complete. NATS was not started."
+else
+  echo "NATS bootstrap complete. Streams: ${streams_seeded}, consumers: ${consumers_seeded}."
+fi

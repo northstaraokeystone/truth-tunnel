@@ -1,0 +1,25 @@
+[workspace]
+members = ["src/crates/*"]
+resolver = "2"
+
+[workspace.package]
+name = "truth-tunnel"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+
+[workspace.dependencies]
+anyhow = "1.0"
+blake3 = "1.5"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.40", features = ["full"] }
+tonic = "0.12"
+prost = "0.13"
+nats = "0.25"
+rusqlite = "0.32"
+rocksdb = "0.23"
+pqcrypto-kyber = "0.14"
+bellman = "0.14"
+qutip = "4.7"
+hex = "0.4"

@@ -1,0 +1,46 @@
+# daemons/phase4-digital-twin/phase.plan.yaml
+# Phase 4: Digital Twin — Prufrock sim + orbital ingestion + entanglement prediction
+# Root hash: [BLAKE3 to be filled on commit]
+
+phase: 4
+name: "digital-twin"
+description: "Integrate rocket-engine Prufrock simulation with nebula-guard orbital feeds. Run digital-twin-groot entanglement sims. Predict latency negation >1.8ms."
+
+required_glyphs:
+  - "bore_progress"              # From rocket-engine sim (ReceiptGlyph)
+  - "orbital_telemetry"          # From nebula-guard (ReceiptGlyph)
+  - "entanglement_prediction"    # From digital-twin-groot (ReceiptGlyph)
+  - "anchor_glyph"               # Batch anchoring of twin outputs
+  - "daemon_status_glyph"        # Health from all active daemons
+
+active_daemons:
+  - "rocket-engine"
+  - "nebula-guard"
+  - "digital-twin-groot"
+  - "drax-metrics"
+  - "groot-swarm"
+
+validation_steps:
+  - "Replay phase 3 ledger state and verify 1000 anchored receipts via ledger-explorer"
+  - "Start rocket-engine and emit continuous bore_progress ReceiptGlyphs for at least 100 segments"
+  - "Start nebula-guard and emit matching orbital_telemetry ReceiptGlyphs for same time window"
+  - "Feed bore_progress + orbital_telemetry streams into digital-twin-groot"
+  - "Run qutip-calibrated Bell-state sim on combined data and emit entanglement_prediction receipts with correlation_score >=0.707"
+  - "Validate predicted_negation_ms >1.8 for 100 consecutive cycles with entanglement correlation >=0.92"
+  - "Ensure digital-twin-groot respects SLOs from config/slo.toml (max_simulation_cycle_ms, min_entanglement_correlation, min_predicted_latency_negation_ms)"
+  - "Anchor twin output batch (bore_progress + orbital_telemetry + entanglement_prediction) into new AnchorGlyph via groot-swarm"
+  - "Verify anchored batch via ledger-explorer Merkle inclusion + Kyber signatures"
+  - "Emit DaemonStatusGlyph from rocket-engine, nebula-guard, digital-twin-groot, drax-metrics, and groot-swarm with sim + SLO stats"
+
+success_condition: "Predicted latency negation >1.8ms for 100 consecutive cycles with entanglement correlation >=0.92 and all twin outputs anchored and provable"
+
+rollback_conditions:
+  - "Entanglement correlation <0.707 for any critical scenario → rollback to phase 3 ledger state and mark digital-twin-groot degraded"
+  - "predicted_negation_ms <=1.8 for more than 5% of cycles in validation window → freeze twin outputs and require human acknowledgment"
+  - "Sim cycle latency >max_simulation_cycle_ms from config/slo.toml for 3 consecutive windows → switch digital-twin-groot to shadow mode and block new routing based on predictions"
+  - "Orbital feed ingestion failure from nebula-guard (unverified or missing orbital_telemetry) → halt nebula-guard routing, emit anomaly_detected, and page Mantis"
+  - "Merkle or Kyber verification failure for anchored twin batch → quarantine affected batch, emit anomaly_detected, and rollback to phase 3"
+
+on_success: "Transition to phase 5 via phase_transition_glyph emitted by star-lord-orchestrator with reference to twin-anchored AnchorGlyph"
+
+on_failure: "Emit emergency_halt IntentGlyph via groot-swarm + mantis-community voice page for Memphis operators and on-call orbital owners"

@@ -1,0 +1,41 @@
+# daemons/phase3-ledger/phase.plan.yaml
+# Phase 3: Ledger — Hot SQLite + cold RocksDB + permanent anchoring
+# Root hash: [BLAKE3 to be filled on commit]
+
+phase: 3
+name: "ledger"
+description: "Bootstrap append-only ledger. Anchor first 1000 receipts to Arweave/IPFS. Validate permanent storage."
+
+required_glyphs:
+  - "anchor_glyph"   # Ledger-anchored batch of receipts
+  - "receipt_glyph"  # 1000+ receipts from phase 2 chain
+  - "daemon_status_glyph"
+
+active_daemons:
+  - "groot-swarm"
+  - "ledger-explorer"
+  - "drax-metrics"
+
+validation_steps:
+  - "Initialize SQLite WAL mode + RocksDB column families per config/ledger.*.toml"
+  - "Verify genesis AnchorGlyph from phase 1 is present and provable"
+  - "Append first 1000 ReceiptGlyphs from phase 2 to hot SQLite ledger"
+  - "Mirror appended range into RocksDB cold archive with tenant prefixes"
+  - "Trigger Merkle compaction and emit compaction_complete ReceiptGlyph"
+  - "Run scripts/check-receipts.sh to pin first AnchorGlyph batch to Arweave/IPFS per config/arweave.yaml"
+  - "Query back 100 random receipts via ledger-explorer::query.rs and validate Merkle inclusion + Kyber signatures"
+  - "Emit DaemonStatusGlyph from ledger-explorer and groot-swarm with storage stats and compaction lag"
+  - "Expose basic ledger metrics via drax-metrics (append throughput, compaction lag, proof success rate)"
+
+success_condition: "First 1000 receipts permanently anchored and verifiable via ledger-explorer, Arweave/IPFS, and Merkle/Kyber proofs"
+
+rollback_conditions:
+  - "SQLite or RocksDB initialization failure → rollback to phase 2 last good chain, block new appends"
+  - "Ledger append failure → quarantine affected range, emit anomaly_detected, and halt ledger-explorer writes"
+  - "Arweave/IPFS pin failure → retry 5x, then halt and page Mantis via anomaly.critical"
+  - "Merkle inclusion proof failure for any sampled receipt → quarantine ledger, emit anomaly_detected, and prevent phase 4"
+  - "Drax-metrics reports compaction lag beyond SLO → freeze advancement and require human acknowledgment"
+
+on_success: "Transition to phase 4 via phase_transition_glyph emitted by star-lord-orchestrator"
+
+on_failure: "Emit emergency_halt IntentGlyph via groot-swarm + mantis-community voice page for on-call humans"

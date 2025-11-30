@@ -1,0 +1,33 @@
+# daemons/phase1-seed/phase.plan.yaml
+# Phase 1: Seed — Genesis bootstrap
+# Root hash: [BLAKE3 to be filled on commit]
+
+phase: 1
+name: "seed"
+description: "Emit genesis IntentGlyph + AnchorGlyph. Bootstrap ledger. Validate first receipts."
+
+required_glyphs:
+  - "intent_glyph"  # Human-signed genesis intent
+  - "anchor_glyph"  # First immutable chain root
+
+active_daemons:
+  - "groot-swarm"
+  - "ledger-explorer"
+
+validation_steps:
+  - "Validate genesis IntentGlyph against schema"
+  - "Emit first AnchorGlyph with Merkle root of empty receipts"
+  - "Append genesis AnchorGlyph to SQLite ledger"
+  - "Pin genesis to Arweave/IPFS via deploy-manifest.sh"
+  - "Emit first DaemonStatusGlyph from groot-swarm"
+
+success_condition: "Genesis AnchorGlyph permanently anchored and verifiable"
+
+rollback_conditions:
+  - "Schema validation failure → abort with no ledger writes"
+  - "Arweave pin failure → retry 3x, then halt"
+  - "Ledger append failure → self-destruct daemon"
+
+on_success: "Transition to phase 2 via phase_transition_glyph"
+
+on_failure: "Emit emergency_halt IntentGlyph + mantis-community voice page"

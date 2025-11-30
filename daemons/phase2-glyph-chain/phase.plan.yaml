@@ -1,0 +1,39 @@
+# daemons/phase2-glyph-chain/phase.plan.yaml
+# Phase 2: Glyph Chain — Schema validation + Merkle + Kyber chain
+# Root hash: [BLAKE3 to be filled on commit]
+
+phase: 2
+name: "glyph-chain"
+description: "Validate all schemas. Establish Merkle-BLAKE3 + Kyber chain. Emit first ReceiptGlyphs with ZK + entanglement extensions."
+
+required_glyphs:
+  - "receipt_glyph"  # First atomic events (bore_progress, orbital_telemetry)
+  - "daemon_status_glyph"  # Heartbeats from active daemons
+  - "zk_anomaly_proof"  # First ZK extension test
+  - "entanglement_prediction"  # First quantum sim output
+
+active_daemons:
+  - "glyph-lib"
+  - "nebula-guard"
+  - "rocket-engine"
+  - "digital-twin-groot"
+
+validation_steps:
+  - "Validate all glyphs against schemas (#4–#7)"
+  - "Emit first bore_progress ReceiptGlyph from rocket-engine"
+  - "Emit first orbital_telemetry ReceiptGlyph from nebula-guard"
+  - "Generate test zk_anomaly_proof with Groth16"
+  - "Run entanglement sim and emit entanglement_prediction from digital-twin-groot"
+  - "Build Merkle tree over first 10 receipts + Kyber sign root"
+  - "Append chain to ledger and emit DaemonStatusGlyph from all active daemons"
+
+success_condition: "100 consecutive valid ReceiptGlyphs chained to genesis AnchorGlyph"
+
+rollback_conditions:
+  - "Schema validation failure → rollback to phase 1 genesis"
+  - "Merkle/Kyber chain break → emit anomaly_receipt + halt nebula-guard"
+  - "ZK sim failure → degrade to shadow mode for Groth16"
+
+on_success: "Transition to phase 3 via phase_transition_glyph"
+
+on_failure: "Emit emergency_halt IntentGlyph + mantis-community voice page"

@@ -1,0 +1,21 @@
+[package]
+name = "spv-api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { workspace = true, features = ["full"] }
+serde_json = { workspace = true }
+nats = { workspace = true }
+blake3 = { workspace = true }
+pqcrypto-kyber = { workspace = true }
+anyhow = { workspace = true }
+tonic = { workspace = true, optional = true }
+prost = { workspace = true, optional = true }
+
+[build-dependencies]
+tonic-build = "0.12"
+
+[features]
+default = ["grpc"]
+grpc = ["tonic", "prost"]

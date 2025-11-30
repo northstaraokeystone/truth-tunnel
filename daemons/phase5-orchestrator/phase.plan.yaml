@@ -1,0 +1,51 @@
+# daemons/phase5-orchestrator/phase.plan.yaml
+# Phase 5: Orchestrator — Full swarm consensus + phase transition automation
+# Root hash: [BLAKE3 to be filled on commit]
+
+phase: 5
+name: "orchestrator"
+description: "Activate star-lord-orchestrator for xAI-style swarm consensus. Run dialectical briefs. Auto-select ZK/quantum variants. Transition to phase 6."
+
+required_glyphs:
+  - "swarm_vote"          # ReceiptGlyph (receipt_type = "swarm_vote") from all Guardians
+  - "phase_transition"    # ReceiptGlyph (receipt_type = "phase_transition") for 5→6
+  - "anchor_glyph"        # Consensus-anchored decisions
+  - "daemon_status_glyph" # Health from orchestrator + core daemons
+
+active_daemons:
+  - "star-lord-orchestrator"
+  - "groot-swarm"
+  - "nebula-guard"
+  - "digital-twin-groot"
+  - "rocket-engine"
+  - "drax-metrics"
+  - "ledger-explorer"
+
+validation_steps:
+  - "Load config/orchestrator/phase_map.yaml and config/orchestrator/routing_rules.yaml; validate graph completeness for phases 1–7"
+  - "Load config/agents/swarm_roles.yaml and verify role weights, veto_power, and selection thresholds (min_acceptance_score, min_entanglement_transitivity)"
+  - "Verify Phase 4 digital twin success condition is anchored and provable via ledger-explorer (twin-related AnchorGlyph + receipts)"
+  - "Activate star-lord-orchestrator and confirm it can read daemon.status.> and anomaly.critical.> streams"
+  - "Run at least 10 variant forks across ZK and entanglement dimensions (zk_variant_fast vs zk_variant_secure; entanglement_balanced vs entanglement_max)"
+  - "For each fork, collect swarm_vote receipts from Star-Lord, Gamora, Rocket, Groot, Drax, Kraglin, and Yondu"
+  - "Ensure Drax veto_power is enforced on any anomaly-related decision (require_drax_approval_on_anomaly = true)"
+  - "Compute VIH scores for each candidate via drax-metrics; require VIH score ≥0.93 and PCE entanglement transitivity ≥0.92"
+  - "Select winning variant per fork and emit final swarm_vote receipts reflecting chosen config / manifest hash"
+  - "Validate consensus acceptance ≥95% (weighted by roles in swarm_roles.yaml) before emitting phase_transition ReceiptGlyph for phase 5→6"
+  - "Anchor consensus decisions (winning variant hashes and associated votes) into AnchorGlyph batches via groot-swarm"
+  - "Verify consensus AnchorGlyphs via ledger-explorer (Merkle inclusion + Kyber signatures) and export orchestration metrics via drax-metrics"
+  - "Emit DaemonStatusGlyph from star-lord-orchestrator, groot-swarm, nebula-guard, digital-twin-groot, rocket-engine, drax-metrics, and ledger-explorer"
+
+success_condition: "Automatic phase 6 trigger via phase_transition ReceiptGlyph (5→6) with consensus acceptance ≥95%, VIH score ≥0.93, and entanglement transitivity ≥0.92, with all consensus decisions anchored and provable"
+
+rollback_conditions:
+  - "Consensus acceptance <95% on a fork → re-fork variants and retry up to 3 times; remain in phase 5 while retries are in progress"
+  - "After 3 failed consensus attempts for the same decision → rollback to Phase 4 configuration, mark orchestrator in degraded mode, and require human IntentGlyph for any further transition"
+  - "Dialectical brief mismatch (e.g., nebula-guard critique vs rocket-engine/digital-twin-groot outputs irreconcilable) → emit anomaly_detected, halt automatic variant promotion, and freeze orchestrator to read-only status"
+  - "VIH score <0.93 or entanglement transitivity <0.92 for a selected variant → treat as invalid, discard fork, and require a new variant set"
+  - "Merkle/Kyber verification failure on consensus AnchorGlyphs → quarantine affected batch, emit anomaly_detected, and rollback to last good Phase 4 AnchorGlyph"
+  - "Orchestrator unable to read daemon.status.> or anomaly.critical.> (NATS/ledger blindness) → suspend all automatic phase transitions and require emergency_halt IntentGlyph evaluation by groot-swarm"
+
+on_success: "Transition to phase 6 via phase_transition ReceiptGlyph emitted by star-lord-orchestrator and anchored by groot-swarm"
+
+on_failure: "Emit emergency_halt IntentGlyph via groot-swarm + mantis-community voice page for all relevant tenants and Guardians"

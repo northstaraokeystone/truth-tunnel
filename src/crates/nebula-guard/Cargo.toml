@@ -1,0 +1,17 @@
+[package]
+name = "nebula-guard"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { workspace = true, features = ["full"] }
+serde_json = { workspace = true }
+nats = { workspace = true }
+blake3 = { workspace = true }
+pqcrypto-kyber = { workspace = true }
+anyhow = { workspace = true }
+bellman = { version = "0.14", optional = true }
+
+[features]
+default = ["zk"]
+zk = ["bellman"]

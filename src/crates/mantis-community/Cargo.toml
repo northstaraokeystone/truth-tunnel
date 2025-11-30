@@ -1,0 +1,18 @@
+[package]
+name = "mantis-community"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { workspace = true, features = ["full"] }
+serde_json = { workspace = true }
+nats = { workspace = true }
+blake3 = { workspace = true }
+pqcrypto-kyber = { workspace = true }
+anyhow = { workspace = true }
+twilio = { version = "0.4", optional = true }
+reqwest = { version = "0.12", features = ["json"], optional = true }
+
+[features]
+default = ["voice"]
+voice = ["twilio", "reqwest"]

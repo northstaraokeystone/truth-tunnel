@@ -1,0 +1,18 @@
+[package]
+name = "star-lord-orchestrator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { workspace = true, features = ["full"] }
+serde_json = { workspace = true }
+nats = { workspace = true }
+blake3 = { workspace = true }
+pqcrypto-kyber = { workspace = true }
+anyhow = { workspace = true }
+clap = { version = "4.5", features = ["derive"] }
+petgraph = { version = "0.6", optional = true }
+
+[features]
+default = ["graph"]
+graph = ["petgraph"]

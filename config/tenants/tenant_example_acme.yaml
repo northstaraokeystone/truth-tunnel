@@ -1,0 +1,32 @@
+# config/tenants/tenant_example_acme.yaml
+# Example for external tenant (e.g., ACME Corp logistics partner)
+# Copy tenant_default.yaml and customize for production
+
+tenant_id: "acme-logistics-01"
+description: "ACME Corp — FedEx hub integration for cargo pod tracking"
+ledger_prefix: "acme-logistics-01:"
+nats_subject_prefix: "acme-logistics-01."
+ipfs_path: "/truth-tunnel/acme-logistics-01"
+arweave_tags:
+  tenant: "acme-logistics-01"
+  site: "fedex-hub-memphis"
+  environment: "prod"
+storage_quota_bytes: 53687091200
+allowed_guardians:
+  - "Star-Lord"
+  - "Rocket"
+  - "Groot"
+  - "Nebula"
+  - "Mantis"
+allowed_daemons:
+  - "groot-swarm"
+  - "rocket-engine"
+  - "nebula-guard"
+  - "digital-twin-groot"
+  - "drax-metrics"
+  - "mantis-community"
+  - "star-lord-orchestrator"
+  - "ledger-explorer"
+  - "spv-api"
+  - "portal-zero"
+allowed_phases: [3, 4, 6]

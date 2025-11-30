@@ -1,0 +1,50 @@
+# daemons/phase6-ops/phase.plan.yaml
+# Phase 6: Ops — External SPV proofs + ZK anomaly sharing + voice paging
+# Root hash: [BLAKE3 to be filled on commit]
+
+phase: 6
+name: "ops"
+description: "Activate spv-api for external Merkle proofs. Enable mantis-community voice paging. nebula-guard ZK anomaly sharing."
+
+required_glyphs:
+  - "zk_anomaly_proof"      # ReceiptGlyph (type = zk_anomaly_proof) from nebula-guard
+  - "voice_page_sent"       # ReceiptGlyph (type = voice_page_sent) from mantis-community
+  - "receipt_glyph"         # SPV-proofed receipts served externally
+  - "anchor_glyph"          # External proof-anchored responses
+  - "daemon_status_glyph"   # Health glyphs from ops daemons
+
+active_daemons:
+  - "spv-api"
+  - "mantis-community"
+  - "nebula-guard"
+  - "ledger-explorer"
+  - "groot-swarm"
+  - "drax-metrics"
+  - "portal-zero"
+
+validation_steps:
+  - "Confirm phases 1–5 success conditions are anchored and provable via ledger-explorer (genesis, glyph-chain, ledger, digital-twin, orchestrator)"
+  - "Start spv-api with DATABASE_URL + REDIS_URL; expose HTTP/OpenAPI and gRPC endpoints on configured ports (e.g., HTTP :3000, gRPC :50051)"
+  - "Verify spv-api can query Merkle proofs via ledger-explorer and return valid SPV responses for at least 100 random receipts"
+  - "Expose at least one public SPV endpoint (e.g., /api/v1/proof/{anchor_or_receipt_id}) and confirm BLAKE3/Merkle/Kyber verification passes end-to-end"
+  - "Trigger a controlled orbital anomaly via test inputs to nebula-guard; generate a zk_anomaly_proof ReceiptGlyph using Groth16 (within max_zk_proof_generation_ms SLO)"
+  - "Serve the zk_anomaly_proof externally via spv-api, ensuring only public_inputs and anomaly_hint are exposed, while private deltas remain hidden"
+  - "Inject a critical anomaly (real or simulated) into anomaly.critical.>; ensure mantis-community generates a Grok-voice brief and sends a Twilio voice page"
+  - "Measure and confirm voice page delivery time <max_page_delivery_seconds (<=12s) from anomaly emission to human call initiation"
+  - "Emit voice_page_sent ReceiptGlyphs for all voice pages; anchor them into the ledger via groot-swarm"
+  - "Verify via spv-api that an external client can retrieve Merkle proofs for zk_anomaly_proof and voice_page_sent receipts and validate them using only public data"
+  - "Emit DaemonStatusGlyph from spv-api, mantis-community, nebula-guard, ledger-explorer, drax-metrics, and groot-swarm with ops metrics (latency, error rates, page success)"
+  - "Confirm drax-metrics exports ZK, SPV, and paging metrics on /metrics and that no critical SLOs are violated during the ops test window"
+
+success_condition: "First external Merkle proof served successfully, first zk_anomaly_proof shared externally without leaking private deltas, and first critical voice page delivered in <12s, all anchored and provable via ledger-explorer and spv-api"
+
+rollback_conditions:
+  - "spv-api failure to serve valid Merkle proof (SPV mismatch, Merkle/Kyber verification failure) → rollback to phase 5 consensus state, disable external SPV endpoints, and mark ops as degraded"
+  - "ZK anomaly sharing failure (Groth16 proof generation/verification fails or exceeds SLO) → switch nebula-guard to shadow mode for zk_share and restrict external exposure of anomaly details"
+  - "Voice page timeout >max_page_delivery_seconds or repeated Twilio/Grok failures → halt mantis-community in production mode, emit anomaly.critical, and page Guardians via alternate channel"
+  - "Persistent ops anomalies (spv-api errors, Redis/DB instability, rate-limit misfires) detected by drax-metrics over validation window → freeze new external proofs and require human IntentGlyph to resume"
+  - "Ledger-explorer unable to prove anchored zk_anomaly_proof or voice_page_sent receipts (Merkle or signature failure) → quarantine affected ranges, rollback to phase 5, and prevent phase 7 advancement"
+
+on_success: "Transition to phase 7 via phase_transition ReceiptGlyph emitted by star-lord-orchestrator and anchored by groot-swarm"
+
+on_failure: "Emit emergency_halt IntentGlyph via groot-swarm + mantis-community voice page to on-call humans and Memphis operators"

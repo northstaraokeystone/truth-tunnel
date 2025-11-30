@@ -1,156 +1,146 @@
-# **Truth Tunnel: The Groot Line Swarm**
+# Truth Tunnel: The Groot Line Swarm
 
-> Beneath Memphis soil,  
-> Groot's roots entwine code and dirt—  
-> Truth tunnels ignite.
+Truth Tunnel is a Rust monorepo of backend-only daemons that simulate, verify, and ledger the first 18.4 km Memphis “Groot Line” (Colossus ↔ FedEx Hub ↔ downtown ↔ orbit) via CLI, gRPC, and JSONL glyphs.
 
-**Thesis:** Truth Tunnel is a Rust monorepo of glyph‑native daemons that simulate, observe, and ledger the first 18.4 km Memphis “Groot Line” — Colossus ↔ FedEx Hub ↔ downtown ↔ orbit — purely via CLI/gRPC/JSONL.  
-
-**Tagline:** We are Groot. Backend-only daemons digging reality. No pixels. Just receipts that force physics to comply (now with ZK + quantum foresight at the edge).
-
-[![CI](https://github.com/northstaraokeystone/truth-tunnel/actions/workflows/ci.yml/badge.svg)](../../actions)  
+[![CI](https://github.com/northstaraokeystone/truth-tunnel/actions/workflows/ci.yml/badge.svg)](../../actions)
+![Progress: 44/55](https://img.shields.io/badge/progress-44%2F55-brightgreen.svg)
 ![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)
 ![Mode: Backend Only](https://img.shields.io/badge/mode-backend--only-black.svg)
 
 ---
 
-## Strategy Snapshot – xAI Orbital Challenge Layer
+## KPI Dashboard (Nov 2025)
 
-This repo now carries the **Grok/xAI orbital challenge** as a first‑class backend pattern:
+| Area            | KPI                                      | Current State (Files #1–#44)                                        | Target                                  | Evidence                                    |
+|-----------------|-------------------------------------------|---------------------------------------------------------------------|-----------------------------------------|---------------------------------------------|
+| Phases          | Binding phase plans defined (1–7)         | 3 / 7 plans committed (seed, glyph-chain, ledger)                  | 7 / 7 phases with executable plans      | `daemons/phase*/phase.plan.yaml`           |
+| Glyphs          | Core schemas + golden examples            | 4 schemas + status + 8 examples + receipts JSONL fixture           | Full glyph set driving live receipts    | `glyphs/schemas/`, `glyphs/examples/`      |
+| SLOs            | Service-level objectives + test coverage  | Global SLO config + 3 integration suites (glyph, SPV, twin)        | All daemons gated by SLOs in runtime    | `config/slo.toml`, `tests/test_*.rs`       |
+| Ledger          | Hot/cold ledger + integrity scripts       | SQLite + RocksDB configs + red-loop + migrate + check-receipts     | Continuous, monitored append-only chain | `config/ledger.*.toml`, `scripts/*.sh,rs`  |
+| Orbital/Quantum | ZK + entanglement paths                   | Schemas + examples + tests for ZK anomaly + twin divergence        | Online Groth16 + entanglement in swarm  | `glyphs/schemas/`, `tests/test_digital_twin.rs` |
 
-- **ZK anomaly shares:** `nebula-guard` calls into `glyph-lib` to generate and verify Groth16‑style proofs over orbital anomaly models. Peers see **proofs**, not private drift deltas. Receipts in `glyphs/receipts/receipts.jsonl` gain optional ZK fields.
-- **Quantum foresight, not FTL:** `glyph-lib` exposes a small quantum sim helper used by `nebula-guard` and `digital-twin-groot` to score anomaly scenarios with a Bell‑style correlation and an **effective latency** prediction. Physics stays honest; the swarm just guesses early.
-- **verify_orbital as lie detector:** Nebula’s `verify_orbital` flow hashes observations, checks ZK proofs, consults the quantum model, and only then mints an `OrbitalGlyph` or an `AnomalyReceipt`. If correlation drops below threshold, you get a fraud receipt, not a shrug.
-- **Same file map, deeper behavior:** All of this lives inside the **existing** crates and paths (`glyphs/`, `config/`, `nebula-guard`, `digital-twin-groot`, `tests/`). No new docs; just more truth squeezed through the current glyph schemas.
+All KPIs are verifiable directly from the repository; no runtime metrics are implied until the swarm is deployed.
 
 ---
 
-## Quick Start
+## System Overview
 
-Bare minimum: Rust, NATS, SQLite/RocksDB, and a terminal you’re not afraid of.
+Truth Tunnel is a backend-only daemon swarm:
+
+- **Glyph-native:** Every operation is a glyph: intent, receipt, anchor, daemon status.
+- **Deterministic:** All state transitions are BLAKE3- and Merkle-anchored, Kyber-1024 signed.
+- **Quantum- and ZK-aware:** Schemas and tests support Groth16 ZK anomaly proofs and entanglement-based latency prediction.
+- **Multi-tenant:** `tenant_id` is mandatory in all glyphs and configs.
+
+Core design is specified in:
+
+- [docs/SDD.md](docs/SDD.md) — System Design Document (invariants, glyph taxonomy, halt rules)  
+- [docs/Charter.md](docs/Charter.md) — Governance contract between humans, daemons, and physics  
+- [docs/Eng_Arch.md](docs/Eng_Arch.md) — Canonical architecture and message flow
+
+---
+
+## Repository Layout (Backend Only)
+
+Workspace and daemons:
+
+- `src/crates/groot-swarm/` — single entrypoint binary (`groot-swarm ship`), phase control, final anchoring
+- `src/crates/glyph-lib/` — shared glyph types, schema bindings, Merkle + Kyber helpers, ZK/quantum helpers
+- `src/crates/rocket-engine/` — Prufrock/TBM simulation and tunnel physics
+- `src/crates/spv-api/` — SPV HTTP/gRPC API for glyph submission and Merkle proof retrieval
+- `src/crates/digital-twin-groot/` — digital twin + entanglement-based latency prediction
+- `src/crates/portal-zero/` — CLI ingress portal for IntentGlyph intake and proof queries
+- `src/crates/ledger-explorer/` — SQLite/RocksDB ledger and Merkle proof path queries
+- `src/crates/star-lord-orchestrator/` — phase/rollback orchestration and process graph
+- `src/crates/mantis-community/` — Twilio/Grok-voice anomaly paging and community signals
+- `src/crates/nebula-guard/` — authN/Z, orbital verification, ZK anomaly sharing
+- `src/crates/drax-metrics/` — metrics, SLO enforcement, red-loop compaction hooks
+
+Supporting structure:
+
+- `daemons/phase*/phase.plan.yaml` — phase execution contracts (Phase 1–3 committed)
+- `glyphs/schemas/*.schema.json` — canonical glyph schemas (anchor, intent, receipt, daemon status)
+- `glyphs/examples/*` — golden glyph fixtures (intent, anchor, receipts, status)
+- `glyphs/receipts/receipts.jsonl` — append-only ledger file (genesis planned in Phase 1)
+- `config/slo.toml` — binding SLOs for latency, anomaly rate, entanglement quality
+- `config/nats.toml` — NATS JetStream message bus topology
+- `config/ledger.sqlite.toml`, `config/ledger.rocksdb.toml` — hot/cold ledger configuration
+- `config/arweave.yaml`, `config/ipfs.yaml` — permanent anchoring endpoints and tags
+- `config/tenants/*.yaml` — multi-tenant isolation (default, xai-memphis-01, spacex-orbit-01, acme example)
+- `config/agents/*.yaml` — Guardians org chart and swarm role weights
+- `config/orchestrator/routing_rules.yaml` — subject → daemon routing map
+- `scripts/weekly_red_loop_compaction.rs` — 7‑day compaction + death-criteria hook
+- `scripts/deploy-manifest.sh` — manifest-based deploy/rollback
+- `scripts/nats-bootstrap.sh` — NATS bootstrap and subject seeding
+- `scripts/ledger-migrate.sh` — ledger schema migrations
+- `scripts/check-receipts.sh` — receipts chain/Merkle integrity check
+- `tests/test_glyph_chain.rs` — glyph chain + Merkle + signature integration test
+- `tests/test_spv_roundtrip.rs` — SPV submit/verify/proof roundtrip test
+- `tests/test_digital_twin.rs` — digital twin divergence, Merkle, and receipt tests
+
+---
+
+## Glyph Pipeline
+
+Glyphs are the only interface:
+
+1. **IntentGlyph** — authorized intent (human or Guardian)  
+2. **ReceiptGlyph** — atomic event receipts (bore, orbital telemetry, ZK anomaly, entanglement prediction, etc.)  
+3. **AnchorGlyph** — Merkle-anchored batch of receipts, Kyber-signed  
+4. **DaemonStatusGlyph** — daemon health and SLO status
+
+Canonical definitions and documentation:
+
+- [glyphs/README.md](glyphs/README.md) — glyph lifecycle, hashing/signing rules  
+- `glyphs/schemas/intent_glyph.schema.json`  
+- `glyphs/schemas/receipt_glyph.schema.json`  
+- `glyphs/schemas/anchor_glyph.schema.json`  
+- `glyphs/schemas/daemon_status_glyph.schema.json`  
+- `glyphs/examples/*.json` and `glyphs/examples/receipts.example.jsonl`
+
+The integration tests under `tests/` validate that chains are consistent, Merkle roots match, Kyber signatures are present, and twin divergence stays below configured thresholds.
+
+---
+
+## 48-Hour Ship Phases (Design Status)
+
+Phase plans currently committed:
+
+1. **Phase 1 — Seed** (`daemons/phase1-seed/phase.plan.yaml`)  
+   - Genesis IntentGlyph and AnchorGlyph, bootstrap ledger, first DaemonStatusGlyph.
+
+2. **Phase 2 — Glyph Chain** (`daemons/phase2-glyph-chain/phase.plan.yaml`)  
+   - Schema validation, Merkle+Kyber chain, first receipts, ZK + entanglement extensions.
+
+3. **Phase 3 — Ledger** (`daemons/phase3-ledger/phase.plan.yaml`)  
+   - SQLite/RocksDB initialization, first 1000 receipts, Arweave/IPFS anchoring, proof sampling.
+
+Phases 4–7 (digital twin, orchestrator, ops, harden) are defined in docs and Eng_Arch and are wired into SLO and routing configs but not yet executed in this repo.
+
+---
+
+## Quick Start (Backend Only)
+
+Requirements: Rust toolchain, `nats-server`, SQLite, RocksDB, Bash.
 
 ```bash
 # clone
 git clone https://github.com/northstaraokeystone/truth-tunnel.git
 cd truth-tunnel
 
-# env: copy and edit as needed (tenant_id, Twilio, Grok, NATS, ledger paths)
+# env: copy and edit (TENANT_ID, NATS, ledger paths, Twilio, Grok)
 cp config/env.example .env
 
-# bootstrap: build all crates + run smoke swarm
+# bootstrap NATS (optional dry run)
+chmod +x scripts/nats-bootstrap.sh
+./scripts/nats-bootstrap.sh --dry-run
+
+# build everything
+cargo build
+
+# run smoke swarm via single entrypoint
 chmod +x ship-all.sh
 ./ship-all.sh
 
-# or explicitly run the orchestrator entrypoint
-cargo build
+# or directly:
 cargo run -p groot-swarm -- ship
-
-Key env knobs (see config/env.example):
-	•	TENANT_ID, TENANT_CONFIG=./config/tenants/tenant_default.yaml
-	•	NATS_URL, NATS_JWT, NATS_SEED
-	•	TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER
-	•	GROK_API_KEY
-	•	LEDGER_SQLITE_PATH / LEDGER_ROCKSDB_PATH
-
-Everything should still run in “dry” mode with fake services if you leave secrets unset. ZK + quantum paths degrade gracefully to classic hashes and metrics.
-
-⸻
-
-Architecture Overview
-
-This repo is a Rust workspace. One crate per daemon; one swarm entrypoint:
-	•	src/crates/groot-swarm/ – Star‑Lord, global CLI entrypoint and daemon orchestrator (./groot-swarm ship).
-	•	src/crates/glyph-lib/ – shared glyph types, AnchorGlyph schemas, Merkle helpers, plus ZK + quantum helper modules used by Nebula and the twin.
-	•	src/crates/rocket-engine/ – Rocket, Prufrock/TBM simulation and tunnel physics.
-	•	src/crates/spv-api/ – SPV/gRPC edge API for glyph submission + receipt retrieval (including orbital anomaly glyphs).
-	•	src/crates/digital-twin-groot/ – Groot, Memphis tunnel digital twin + projections, now also ingesting orbital/entanglement glyphs for foresight.
-	•	src/crates/portal-zero/ – CLI/gRPC ingress portal zero (first hole into the swarm).
-	•	src/crates/ledger-explorer/ – SQLite/RocksDB‑backed ledger explorer and queries over every glyph type.
-	•	src/crates/star-lord-orchestrator/ – orchestrator brain wired to config/orchestrator/*.
-	•	src/crates/mantis-community/ – Mantis, Twilio/Grok-voice hooks and phone ops.
-	•	src/crates/nebula-guard/ – Nebula, authN/Z and policy engine with verify_orbital ZK + quantum lie detection for anomalies.
-	•	src/crates/drax-metrics/ – Drax, metrics, alerts, red‑loop compaction targets, including Bell‑style correlation and ZK health gauges.
-
-Supporting structure (unchanged):
-	•	daemons/phase*/ – 7‑phase 48h build daemons with phase.plan.yaml.
-	•	glyphs/ – canonical glyph schemas, examples, and the receipts ledger.
-	•	config/ – SLOs, agents, orchestrator routing, tenant configs (including Nebula’s ZK quorum + orbital roles).
-	•	scripts/ – red‑loop compaction, NATS bootstrap, ledger migrations, deploy manifests.
-	•	docs/Eng_Arch.md – high‑level architecture sketch (stub, but canonical source of truth).
-
-⸻
-
-Glyphs & Receipts
-
-Everything in this swarm is a glyph.
-
-Flow: ingest → normalize → anchor → ZK/quantum (optional) → ledger → emit receipt
-	•	AnchorGlyph: minimal, tenant‑scoped statement about “what just happened.”
-	•	Receipt: Merkle‑anchored confirmation that a glyph was accepted and persisted, optionally enriched with:
-	•	a ZK proof stub (e.g., zk_proof, public_inputs_hash), and
-	•	an entanglement stub (e.g., bell_correlation, negation_ms).
-
-All receipts are JSONL (glyphs/receipts/receipts.jsonl), one glyph per line, append‑only:
-
-{"tenant_id":"demo","glyph_type":"anchor","anchor_id":"ANCHOR_0001","phase":"phase1-seed","payload":{"event":"tunnel_segment_started","segment_km":0.0},"ts":"2025-11-28T00:00:00Z","merkle_root":"[TBD]"}
-
-Orbital flows simply extend the payload shape (within the existing schemas) instead of inventing new file paths. Schemas live in glyphs/schemas/*.schema.json and are mirrored inside src/crates/glyph-lib/glyphs/.
-
-⸻
-
-Agents & Theme (Guardians Org Chart)
-
-Character	Codename Crate	Responsibility
-Star‑Lord	groot-swarm, star-lord-orchestrator	CLI entry, daemon graph, process orchestration
-Gamora	nebula-guard	Safety, auth, ZK policy enforcement, verify_orbital contracts
-Rocket	rocket-engine	TBM/Prufrock simulation and tunnel physics
-Groot	digital-twin-groot	Memphis digital twin, tunnel + orbital state projections
-Drax	drax-metrics	Metrics, alerts, red‑loop + ZK/entanglement health thresholds
-Mantis	mantis-community	Twilio/Grok-voice community & ops channels
-Yondu/Kraglin	config/agents/*.yaml	Swarm role maps, xAI consensus & Librarian agents
-
-The swarm self‑heals via Librarian agents (defined in config/agents/swarm_roles.yaml) that reconcile daemons against the ledger and restart/rewind when glyph chains disagree — including mismatched ZK proofs or suspicious entanglement scores.
-
-⸻
-
-48h Ship Status
-
-This repo is designed for the 48‑hour backend‑only sprint:
-	•	Phase 0 – Skeleton: workspace, crates, configs stubbed (MERKLE_ROOT: [TBD])
-	•	Phase 1 – Seed: first ANCHOR_0001 glyph written to glyphs/receipts/receipts.jsonl
-	•	Phase 2 – Ledger: SPV API + ledger‑explorer round‑trip green
-	•	Phase 3 – Twin: digital twin consumes ledger stream and projects tunnel state
-	•	Phase 4 – Swarm: ./groot-swarm ship spins up a minimal but real daemon constellation
-	•	Phase 5 – Orbital ZK: Nebula’s verify_orbital flow emitting ZK‑backed anomaly receipts
-	•	Phase 6 – Quantum Foresight: entanglement metrics feeding Drax + Groot’s projections
-
-Update this section ruthlessly as receipts land. Rhetoric without receipts is a bug.
-
-⸻
-
-Unfinished Manifesto (Tease)
-
-The philosophy, open questions, and failure criteria live in:
-	•	docs/UnfinishedManifesto.md￼
-	•	docs/open_questions.md￼
-	•	docs/death_criteria.md￼
-
-When you’re tempted to believe the tunnel is “done,” go read those and then ship another glyph.
-
-⸻
-
-Contribute / Ship
-	•	CI: GitHub Actions workflow (see .github/workflows/ci.yml) runs cargo fmt, cargo clippy, and cargo test.
-	•	Style: One daemon per crate, keep modules small (<300 lines), one responsibility per glyph. ZK and quantum logic belong in glyph-lib and are consumed via clean APIs, not re‑implemented everywhere.
-	•	Workflow:
-	1.	Fork + branch (feat/nebula-verify-orbital, fix/entanglement-threshold).
-	2.	Add tests under tests/ or daemon‑local tests/ folder.
-	3.	Open a PR with a link to at least one new/updated receipt glyph showing the behavior.
-
-To join the dig locally:
-
-cargo build
-cargo run -p groot-swarm -- ship
-
-Run ./groot-swarm ship to join the dig. We are Groot.
-
